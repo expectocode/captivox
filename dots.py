@@ -50,11 +50,16 @@ class DotsWidget(QWidget):
         return QSize(50,50)
 
     def sizeHint(self):
-        return QSize(180,180)
+        return QSize(400,400)
 
     def next_animation_frame(self):
         self.frame_no += 1
-        self.update()
+        # self.update()
+        self.grab().save('gifs/1/img{0:03d}.png'.format(self.frame_no), None, 100)
+        if self.frame_no == 180 * 2:
+            self.timer.stop()
+            self.close()
+
 
     def paintEvent(self, QPaintEvent):
         pain = QPainter(self)
@@ -63,13 +68,14 @@ class DotsWidget(QWidget):
         pain.setPen(QPen(QColor(10,10,10), 3))
 
         halfmax = 180
-        max_dot_num = 8
+        max_dot_num = 18
         for dot_num in range(max_dot_num):
+            frame_no = self.frame_no + dot_num*(180/max_dot_num)/3
             angle_off = radians(360/max_dot_num) * dot_num
             green = ((255/max_dot_num)-1) * (max_dot_num - dot_num)
             blue = ((255/max_dot_num)-1) * dot_num
             pain.setPen(QPen(QColor(0, green, blue), 3))
-            progress = (cos(radians(3 * self.frame_no)) + 1)/2 * 180
+            progress = (cos(radians(3 * frame_no)) + 1)/2 * 180
             # Progress dictates the range of values of x later fed into cos(x)
             # frame_no multiplier dictates frequency of oscillations
             # Progress left side goes between 0 and 1, so overall goes between
@@ -90,13 +96,13 @@ class Window(QWidget):
         super().__init__(None)
         layout = QVBoxLayout(self)
         # circlewid = CircleWidget()
-        timer = QTimer(self)
+        self.timer = QTimer(self)
         # timer.timeout.connect(circlewid.next_animation_frame)
         # layout.addWidget(circlewid)
         dotwid = DotsWidget()
-        timer.timeout.connect(dotwid.next_animation_frame)
+        self.timer.timeout.connect(dotwid.next_animation_frame)
         layout.addWidget(dotwid)
-        timer.start(20)
+        self.timer.start(20)
         # self.setLayout(layout)
 
 def main():
