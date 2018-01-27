@@ -43,29 +43,51 @@ class DotsWidget(QWidget):
     def change_angle_factor(self, value):
         self.parent().a_f_slider_val_label.setText(str(value))
         self.angle_factor = value
+        if self.parent().framerate_slider.value() == 0:
+            self.frame_no -= 1
+            self.next_animation_frame()
 
     def change_halfmax(self, value):
         self.parent().halfmax_slider_val_label.setText(str(value))
+        self.halfmax = value
+        if self.parent().framerate_slider.value() == 0:
+            self.frame_no -= 1
+            self.next_animation_frame()
 
     def change_speedmult(self, value):
         self.parent().speedmult_slider_val_label.setText(str(value))
         self.speedmult = value
+        if self.parent().framerate_slider.value() == 0:
+            self.frame_no -= 1
+            self.next_animation_frame()
 
     def change_num_dots(self, value):
         self.parent().num_dots_slider_val_label.setText(str(value))
         self.num_dots = value
+        if self.parent().framerate_slider.value() == 0:
+            self.frame_no -= 1
+            self.next_animation_frame()
 
     def change_dot_size(self, value):
         self.parent().dot_size_slider_val_label.setText(str(value))
         self.dot_size = value
+        if self.parent().framerate_slider.value() == 0:
+            self.frame_no -= 1
+            self.next_animation_frame()
 
     def change_x_multiplier(self, value):
         self.parent().x_multiplier_slider_val_label.setText(str(value))
         self.x_multiplier = value
+        if self.parent().framerate_slider.value() == 0:
+            self.frame_no -= 1
+            self.next_animation_frame()
 
     def change_y_multiplier(self, value):
         self.parent().y_multiplier_slider_val_label.setText(str(value))
         self.y_multiplier = value
+        if self.parent().framerate_slider.value() == 0:
+            self.frame_no -= 1
+            self.next_animation_frame()
 
     def next_animation_frame(self):
         if SAVING:
