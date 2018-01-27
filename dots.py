@@ -7,15 +7,14 @@ from PyQt5.QtCore import QSize, QTimer, QPointF, Qt
 
 SAVING = False
 # SAVING = True
-SPEED_MULT = 4
-HALFMAX = 180
 
-# speed_slider.setValue(5)
-# x_multiplier_slider.setValue(1)
-# y_multiplier_slider.setValue(1)
-# dot_size_slider.setValue(6)
-# num_dots_slider.setValue(40)
-# angle_factor_slider.setValue(360)
+X_MULT_DEF = 1
+Y_MULT_DEF = 1
+DOT_SIZE_DEF = 6
+NUM_DOTS_DEF = 40
+ANGLE_FACTOR_DEF = 360
+HALFMAX_DEF = 180
+SPEED_MULT_DEF = 3
 
 class DotsWidget(QWidget):
 
@@ -27,11 +26,13 @@ class DotsWidget(QWidget):
         self.setAutoFillBackground(True)
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.frame_no = 1
-        self.angle_factor = 360 # related to degrees offset of each dot
-        self.num_dots = 40
-        self.dot_size = 6
-        self.x_multiplier = 1
-        self.y_multiplier = 1
+        self.angle_factor = ANGLE_FACTOR_DEF # related to degrees offset of each dot
+        self.num_dots = NUM_DOTS_DEF
+        self.dot_size = DOT_SIZE_DEF
+        self.x_multiplier = X_MULT_DEF
+        self.y_multiplier = Y_MULT_DEF
+        self.halfmax = HALFMAX_DEF
+        self.speedmult = SPEED_MULT_DEF
 
     def minimumSizeHint(self):
         return QSize(50,50)
@@ -42,6 +43,13 @@ class DotsWidget(QWidget):
     def change_angle_factor(self, value):
         self.parent().a_f_slider_val_label.setText(str(value))
         self.angle_factor = value
+
+    def change_halfmax(self, value):
+        self.parent().halfmax_slider_val_label.setText(str(value))
+
+    def change_speedmult(self, value):
+        self.parent().speedmult_slider_val_label.setText(str(value))
+        self.speedmult = value
 
     def change_num_dots(self, value):
         self.parent().num_dots_slider_val_label.setText(str(value))
@@ -63,7 +71,7 @@ class DotsWidget(QWidget):
         if SAVING:
             self.grab().save('gifs/1/img{0:03d}.png'.format(self.frame_no), None, 100)
             # if self.frame_no > 360/SPEED_MULT:
-            if self.frame_no >= 360 /SPEED_MULT:
+            if self.frame_no >= 2*self.halfmax /self.speedmult:  # TODO hmmm
                 self.timer.stop()
                 self.parent().close()
         else:
@@ -73,11 +81,11 @@ class DotsWidget(QWidget):
     def paintEvent(self, QPaintEvent):
         pain = QPainter(self)
         pain.setRenderHint(QPainter.Antialiasing, True)
-        pain.translate(self.width()/2, self.height() /2)
+        pain.translate(self.width()/2, self.height() /2) # Make (0,0) centre
         pain.setPen(QPen(QColor(10,10,10), 3))
 
         for cur_dot_num in range(self.num_dots):
-            frame_no = self.frame_no + cur_dot_num*(180/self.num_dots)/SPEED_MULT
+            frame_no = self.frame_no + cur_dot_num*(180/self.num_dots)/self.speedmult
             angle_off = radians(self.angle_factor/self.num_dots) * cur_dot_num
             green = ((255/self.num_dots)-1) * (self.num_dots - cur_dot_num)
             blue = ((255/self.num_dots)-1) * cur_dot_num
@@ -85,7 +93,7 @@ class DotsWidget(QWidget):
             pain.setPen(QPen(colour))
             pain.setBrush(QBrush(colour))
             # progress = (cos(radians(SPEED_MULT * frame_no)) + 1)/2 * 180
-            progress = abs((frame_no * SPEED_MULT) % (2*HALFMAX)-HALFMAX)
+            progress = abs((frame_no * self.speedmult) % (2*self.halfmax)-self.halfmax)
             # Progress oscillates every 360/speed_mult frames
             # Progress dictates the range of values of x later fed into cos(x)
             # frame_no multiplier dictates frequency of oscillations
@@ -117,7 +125,7 @@ class Window(QWidget):
         angle_factor_box = QHBoxLayout()
         self.angle_factor_slider = QSlider(Qt.Horizontal)
         self.angle_factor_slider.setMaximum(1080)
-        self.angle_factor_slider.setValue(360)
+        self.angle_factor_slider.setValue(ANGLE_FACTOR_DEF)
         self.a_f_slider_val_label = QLabel(str(self.angle_factor_slider.value()))
         self.angle_factor_slider.valueChanged.connect(self.dotwid.change_angle_factor)
         # num dots, col dots - gradient
@@ -128,7 +136,7 @@ class Window(QWidget):
         num_dots_box = QHBoxLayout()
         self.num_dots_slider = QSlider(Qt.Horizontal)
         self.num_dots_slider.setMaximum(120)
-        self.num_dots_slider.setValue(40)
+        self.num_dots_slider.setValue(NUM_DOTS_DEF)
         self.num_dots_slider.valueChanged.connect(self.dotwid.change_num_dots)
         self.num_dots_slider_val_label = QLabel(str(self.num_dots_slider.value()))
         num_dots_box.addWidget(self.num_dots_slider)
@@ -138,7 +146,7 @@ class Window(QWidget):
         dot_size_box = QHBoxLayout()
         self.dot_size_slider = QSlider(Qt.Horizontal)
         self.dot_size_slider.setMaximum(40)
-        self.dot_size_slider.setValue(6)
+        self.dot_size_slider.setValue(DOT_SIZE_DEF)
         self.dot_size_slider.valueChanged.connect(self.dotwid.change_dot_size)
         self.dot_size_slider_val_label = QLabel(str(self.dot_size_slider.value()))
         dot_size_box.addWidget(self.dot_size_slider)
@@ -148,7 +156,7 @@ class Window(QWidget):
         x_multiplier_box = QHBoxLayout()
         self.x_multiplier_slider = QSlider(Qt.Horizontal)
         self.x_multiplier_slider.setMaximum(10)
-        self.x_multiplier_slider.setValue(1)
+        self.x_multiplier_slider.setValue(X_MULT_DEF)
         self.x_multiplier_slider.valueChanged.connect(self.dotwid.change_x_multiplier)
         self.x_multiplier_slider_val_label = QLabel(str(self.x_multiplier_slider.value()))
         x_multiplier_box.addWidget(self.x_multiplier_slider)
@@ -158,23 +166,45 @@ class Window(QWidget):
         y_multiplier_box = QHBoxLayout()
         self.y_multiplier_slider = QSlider(Qt.Horizontal)
         self.y_multiplier_slider.setMaximum(10)
-        self.y_multiplier_slider.setValue(1)
+        self.y_multiplier_slider.setValue(Y_MULT_DEF)
         self.y_multiplier_slider.valueChanged.connect(self.dotwid.change_y_multiplier)
         self.y_multiplier_slider_val_label = QLabel(str(self.y_multiplier_slider.value()))
         y_multiplier_box.addWidget(self.y_multiplier_slider)
         y_multiplier_box.addWidget(self.y_multiplier_slider_val_label)
         controls_box.addRow("Y Multiplier", y_multiplier_box)
 
-        speed_box = QHBoxLayout()
-        self.speed_slider = QSlider(Qt.Horizontal)
-        # self.speed_slider.setMinimum(0)
-        self.speed_slider.setMaximum(10)
-        self.speed_slider.setValue(5)
-        self.speed_slider.valueChanged.connect(self.change_speed)
-        self.speed_slider_val_label = QLabel(str(self.speed_slider.value()))
-        speed_box.addWidget(self.speed_slider)
-        speed_box.addWidget(self.speed_slider_val_label)
-        controls_box.addRow("Speed", speed_box)
+        halfmax_box = QHBoxLayout()
+        self.halfmax_slider = QSlider(Qt.Horizontal)
+        # self.halfmax_slider.setMinimum(0)
+        self.halfmax_slider.setMaximum(720)
+        self.halfmax_slider.setValue(HALFMAX_DEF)
+        self.halfmax_slider.valueChanged.connect(self.dotwid.change_halfmax)
+        self.halfmax_slider_val_label = QLabel(str(self.halfmax_slider.value()))
+        halfmax_box.addWidget(self.halfmax_slider)
+        halfmax_box.addWidget(self.halfmax_slider_val_label)
+        controls_box.addRow("Shiver", halfmax_box)
+
+        framerate_box = QHBoxLayout()
+        self.framerate_slider = QSlider(Qt.Horizontal)
+        # self.framerate_slider.setMinimum(0)
+        self.framerate_slider.setMaximum(10)
+        self.framerate_slider.setValue(5)
+        self.framerate_slider.valueChanged.connect(self.change_framerate)
+        self.framerate_slider_val_label = QLabel(str(self.framerate_slider.value()))
+        framerate_box.addWidget(self.framerate_slider)
+        framerate_box.addWidget(self.framerate_slider_val_label)
+        controls_box.addRow("Framerate", framerate_box)
+
+        speedmult_box = QHBoxLayout()
+        self.speedmult_slider = QSlider(Qt.Horizontal)
+        self.speedmult_slider.setMinimum(1)
+        self.speedmult_slider.setMaximum(12)
+        self.speedmult_slider.setValue(SPEED_MULT_DEF)
+        self.speedmult_slider.valueChanged.connect(self.dotwid.change_speedmult)
+        self.speedmult_slider_val_label = QLabel(str(self.speedmult_slider.value()))
+        speedmult_box.addWidget(self.speedmult_slider)
+        speedmult_box.addWidget(self.speedmult_slider_val_label)
+        controls_box.addRow("Speed", speedmult_box)
 
         reset_button = QPushButton("Reset values")
         reset_button.pressed.connect(self.reset_controls)
@@ -198,17 +228,17 @@ class Window(QWidget):
         # TODO toggle showing settings, axis lines & toggle, jerkiness fix, colours
         # TODO not have to change default values in multiple places (DotWidget, sliders, reset)
 
-    def change_speed(self, value):
+    def change_framerate(self, value):
         if value == 0:
             self.dotwid.timer.stop()
         else:
             self.dotwid.timer.start(100/value)
-        self.speed_slider_val_label.setText(str(value))
+        self.framerate_slider_val_label.setText(str(value))
 
     def reset_controls(self):
         self.speed_slider.setValue(5)
-        self.x_multiplier_slider.setValue(1)
-        self.y_multiplier_slider.setValue(1)
+        self.x_multiplier_slider.setValue(X_MULT_DEF)
+        self.y_multiplier_slider.setValue(Y_MULT_DEF)
         self.dot_size_slider.setValue(6)
         self.num_dots_slider.setValue(40)
         self.angle_factor_slider.setValue(360)
