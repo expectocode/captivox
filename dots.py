@@ -235,12 +235,13 @@ class Window(QWidget):
         self.framerate_slider_val_label.setText(str(value))
 
     def reset_controls(self):
-        self.speed_slider.setValue(5)
+        self.framerate_slider.setValue(5)
         self.x_multiplier_slider.setValue(X_MULT_DEF)
         self.y_multiplier_slider.setValue(Y_MULT_DEF)
         self.dot_size_slider.setValue(6)
         self.num_dots_slider.setValue(40)
         self.angle_factor_slider.setValue(360)
+        self.speedmult_slider.setValue(SPEED_MULT_DEF)
 
 def main():
     app = QApplication([])
