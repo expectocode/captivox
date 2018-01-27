@@ -225,8 +225,7 @@ class Window(QWidget):
             self.dotwid.timer.start(100/5)
         # self.setLayout(layout)
 
-        # TODO toggle showing settings, axis lines & toggle, jerkiness fix, colours
-        # TODO not have to change default values in multiple places (DotWidget, sliders, reset)
+        # TODO toggle showing settings, axis lines & toggle, colours
 
     def change_framerate(self, value):
         if value == 0:
