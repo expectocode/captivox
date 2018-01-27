@@ -2,8 +2,8 @@
 from math import sin, cos, radians
 from PyQt5.QtGui import QPainter, QPalette, QPen, QColor, QBrush
 from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QFormLayout, QSizePolicy,
-                             QApplication, QSlider, QLabel, QPushButton)
-from PyQt5.QtCore import QSize, QTimer, QPointF, Qt
+                             QApplication, QSlider, QLabel, QPushButton, QCheckBox, QSpacerItem)
+from PyQt5.QtCore import QSize, QTimer, QPointF, Qt, QLineF
 
 SAVING = False
 # SAVING = True
@@ -15,6 +15,7 @@ NUM_DOTS_DEF = 40
 ANGLE_FACTOR_DEF = 360
 HALFMAX_DEF = 180
 SPEED_MULT_DEF = 3
+AXES_DEF = False
 
 class DotsWidget(QWidget):
 
@@ -33,6 +34,7 @@ class DotsWidget(QWidget):
         self.y_multiplier = Y_MULT_DEF
         self.halfmax = HALFMAX_DEF
         self.speedmult = SPEED_MULT_DEF
+        self.draw_axes = AXES_DEF
 
     def minimumSizeHint(self):
         return QSize(50,50)
@@ -60,6 +62,10 @@ class DotsWidget(QWidget):
         if self.parent().framerate_slider.value() == 0:
             self.frame_no -= 1
             self.next_animation_frame()
+
+    def change_draw_axes(self, value):
+        print(self.draw_axes)
+        self.draw_axes= value
 
     def change_num_dots(self, value):
         self.parent().num_dots_slider_val_label.setText(str(value))
@@ -104,7 +110,12 @@ class DotsWidget(QWidget):
         pain = QPainter(self)
         pain.setRenderHint(QPainter.Antialiasing, True)
         pain.translate(self.width()/2, self.height() /2) # Make (0,0) centre
-        pain.setPen(QPen(QColor(10,10,10), 3))
+
+        if self.draw_axes:
+            pain.setPen(QPen(QColor(0, 0, 0, 64), 1))
+            # Line(x1,y2,x2,y2)
+            pain.drawLine(QLineF(0, self.height()/2, 0, -self.height()/2))
+            pain.drawLine(QLineF(self.width()/2,0,-self.width()/2,0))
 
         for cur_dot_num in range(self.num_dots):
             frame_no = self.frame_no + cur_dot_num*(180/self.num_dots)/self.speedmult
@@ -197,7 +208,7 @@ class Window(QWidget):
 
         halfmax_box = QHBoxLayout()
         self.halfmax_slider = QSlider(Qt.Horizontal)
-        # self.halfmax_slider.setMinimum(0)
+        self.halfmax_slider.setMinimum(1)
         self.halfmax_slider.setMaximum(720)
         self.halfmax_slider.setValue(HALFMAX_DEF)
         self.halfmax_slider.valueChanged.connect(self.dotwid.change_halfmax)
@@ -208,7 +219,6 @@ class Window(QWidget):
 
         framerate_box = QHBoxLayout()
         self.framerate_slider = QSlider(Qt.Horizontal)
-        # self.framerate_slider.setMinimum(0)
         self.framerate_slider.setMaximum(10)
         self.framerate_slider.setValue(5)
         self.framerate_slider.valueChanged.connect(self.change_framerate)
@@ -228,10 +238,21 @@ class Window(QWidget):
         speedmult_box.addWidget(self.speedmult_slider_val_label)
         controls_box.addRow("Speed", speedmult_box)
 
+        self.draw_axes_checkbox = QCheckBox("Show axes")
+        self.draw_axes_checkbox.stateChanged.connect(self.dotwid.change_draw_axes)
+        # controls_box.addWidget(self.draw_axes_checkbox)
+
         reset_button = QPushButton("Reset values")
         reset_button.pressed.connect(self.reset_controls)
 
-        controls_box.addWidget(reset_button)
+        # controls_box.addWidget(reset_button)
+        last_controls = QHBoxLayout()
+        last_controls.addWidget(self.draw_axes_checkbox)
+        last_controls.addSpacerItem(QSpacerItem(2,2,QSizePolicy.MinimumExpanding))
+        last_controls.addWidget(reset_button)
+        last_controls.addSpacerItem(QSpacerItem(2,2,QSizePolicy.MinimumExpanding))
+        controls_box.addRow(last_controls)
+
         controls_widget = QWidget(self)
         controls_widget.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
         pal = QPalette()
@@ -245,9 +266,8 @@ class Window(QWidget):
             self.dotwid.timer.start(1)
         else:
             self.dotwid.timer.start(100/5)
-        # self.setLayout(layout)
 
-        # TODO toggle showing settings, axis lines & toggle, colours
+        # TODO toggle showing settings,  colours
 
     def change_framerate(self, value):
         if value == 0:
