@@ -69,20 +69,12 @@ class DotsWidget(QWidget):
             green = ((255/max_dot_num)-1) * (max_dot_num - dot_num)
             blue = ((255/max_dot_num)-1) * dot_num
             pain.setPen(QPen(QColor(0, green, blue), 3))
-            # height = self.height() * cos(angle_off)
-            #
-            # progress = abs((self.frame_no % (2*halfmax)) - halfmax) #/ halfmax
-            # x = ((sin(radians(progress))+1)/8) * height #
-            # y = ((cos(radians(progress))+1)/4) * height # - self.height()/2
-            # print(progress, y)
-
-            # progress1 = abs((self.frame_no % (2*halfmax))-halfmax) # constant speed
             progress = (cos(radians(3 * self.frame_no)) + 1)/2 * 180
             # Progress dictates the range of values of x later fed into cos(x)
             # frame_no multiplier dictates frequency of oscillations
             # Progress left side goes between 0 and 1, so overall goes between
             # 0 and 90 which later gives us a cos(progress) ranging between
-            # 1 and 0, which combines with sometimes-neg wid * hei to give a full range
+            # 1 and -1, which combines with sometimes-neg wid * hei to give a full range
             print(self.frame_no,progress)
             height = sin(angle_off) * self.height()
             width = cos(angle_off) * self.width()
