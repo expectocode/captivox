@@ -8,7 +8,14 @@ from PyQt5.QtCore import QSize, QTimer, QPointF, Qt
 SAVING = False
 # SAVING = True
 SPEED_MULT = 4
+HALFMAX = 180
 
+# speed_slider.setValue(5)
+# x_multiplier_slider.setValue(1)
+# y_multiplier_slider.setValue(1)
+# dot_size_slider.setValue(6)
+# num_dots_slider.setValue(40)
+# angle_factor_slider.setValue(360)
 
 class DotsWidget(QWidget):
 
@@ -19,7 +26,7 @@ class DotsWidget(QWidget):
         self.setPalette(pal)
         self.setAutoFillBackground(True)
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-        self.frame_no: int = 1
+        self.frame_no = 1
         self.angle_factor = 360 # related to degrees offset of each dot
         self.num_dots = 40
         self.dot_size = 6
@@ -77,13 +84,14 @@ class DotsWidget(QWidget):
             colour = QColor(0, green, blue)
             pain.setPen(QPen(colour))
             pain.setBrush(QBrush(colour))
-            progress = (cos(radians(SPEED_MULT * frame_no)) + 1)/2 * 180
+            # progress = (cos(radians(SPEED_MULT * frame_no)) + 1)/2 * 180
+            progress = abs((frame_no * SPEED_MULT) % (2*HALFMAX)-HALFMAX)
             # Progress oscillates every 360/speed_mult frames
             # Progress dictates the range of values of x later fed into cos(x)
             # frame_no multiplier dictates frequency of oscillations
-            # Progress left side goes between 0 and 1, so overall goes between
-            # 0 and 180 which later gives us a cos(progress) ranging between
-            # 1 and -1, which combines with sometimes-neg wid * hei to give a full range
+            # Progress ranges between 0 and 180 which later gives us a
+            # cos(progress) ranging between # 1 and -1, which combines with
+            # sometimes-neg wid * hei to give a full range
             # print(self.frame_no,progress)
             height = sin(angle_off) * (self.height() - 100)
             width = cos(angle_off) * (self.width() - 100)
@@ -193,11 +201,11 @@ class Window(QWidget):
     def change_speed(self, value):
         if value == 0:
             self.dotwid.timer.stop()
-            return
-        self.dotwid.timer.start(100/value)
+        else:
+            self.dotwid.timer.start(100/value)
         self.speed_slider_val_label.setText(str(value))
 
-    def reset_controls(self, *args):
+    def reset_controls(self):
         self.speed_slider.setValue(5)
         self.x_multiplier_slider.setValue(1)
         self.y_multiplier_slider.setValue(1)
