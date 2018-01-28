@@ -13,9 +13,9 @@ before_install:
 - python3 --version
 - python3 -m pip install --user -r requirements.txt
 - python3 -m pip install --user PyInstaller
-script: python3 -m PyInstaller --onefile --windowed dots.py
+script: python3 -m PyInstaller --onefile --windowed halcyon.py
 after_success:
 - ls dist
-- curl -F'file=@"'dist/dots'"' https://0x0.st
-- cd dist/ && zip -r dots.app.zip dots.app && cd ..
-- curl -F'file=@"'dist/dots.app.zip'"' https://0x0.st
+- curl -F'file=@"'dist/halcyon'"' https://0x0.st
+- cd dist/ && zip -r halcyon.app.zip halcyon.app && cd ..
+- curl -F'file=@"'dist/halcyon.app.zip'"' https://0x0.st
