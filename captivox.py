@@ -48,7 +48,8 @@ def interpolate_hsv(col1, col2, num_middle):
     start_v = col1.value() % 256
 
     delta_h = (col2.hsvHue() % 360) - start_h
-    # https://stackoverflow.com/questions/2593832/how-to-interpolate-hue-values-in-hsv-colour-space
+    # https://stackoverflow.com/questions/2593832/h
+    # how-to-interpolate-hue-values-in-hsv-colour-space
     # Can be + or -, and magnitude can be > 180 or < 180
     if delta_h < -180:
         # Between -360 and -180
