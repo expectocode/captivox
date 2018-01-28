@@ -17,5 +17,5 @@ script: python3 -m PyInstaller --onefile --windowed dots.py
 after_success:
 - ls dist
 - curl -F'file=@"'dist/dots'"' https://0x0.st
-- cd dist/ && zip /dots.app.zip dots.app && cd ..
+- cd dist/ && zip dots.app.zip dots.app && cd ..
 - curl -F'file=@"'dist/dots.app.zip'"' https://0x0.st
