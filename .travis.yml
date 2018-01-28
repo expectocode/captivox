@@ -13,5 +13,4 @@ before_install:
 - python3 --version
 - python3 -m pip install --user -r requirements.txt
 - python3 -m pip install --user PyInstaller
-- which pyinstaller
-script: pyinstaller --onefile --windowed dots.py
+script: python3 -m PyInstaller --onefile --windowed dots.py
