@@ -12,13 +12,10 @@ EXPORT_AVAILABLE = True
 try:
     import imageio
 except ImportError:
-    print("Pattern export will be unavailable")
+    print("Animation video export will be unavailable")
     EXPORT_AVAILABLE = False
-    # TODO show an error on trying
 
-SAVING = False
-# SAVING = True
-
+# Default values of various options
 X_MULT_DEF = 1
 Y_MULT_DEF = 1
 DOT_SIZE_DEF = 6
@@ -26,10 +23,12 @@ NUM_DOTS_DEF = 40
 ANGLE_FACTOR_DEF = 360
 HALFMAX_DEF = 180
 SPEED_MULT_DEF = 3
+FRAMERATE_DEF = 5
 AXES_DEF = False
 
 
 class DotsWidget(QWidget):
+    """A custom widget for animating dots"""
 
     def __init__(self):
         super().__init__()
@@ -39,7 +38,7 @@ class DotsWidget(QWidget):
         self.setAutoFillBackground(True)
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.frame_no = 1
-        self.angle_factor = ANGLE_FACTOR_DEF # related to degrees offset of each dot
+        self.angle_factor = ANGLE_FACTOR_DEF  # related to degrees offset of each dot
         self.num_dots = NUM_DOTS_DEF
         self.dot_size = DOT_SIZE_DEF
         self.x_multiplier = X_MULT_DEF
@@ -49,12 +48,15 @@ class DotsWidget(QWidget):
         self.draw_axes = AXES_DEF
 
     def minimumSizeHint(self):
-        return QSize(50,50)
+        """Must be implemented"""
+        return QSize(50, 50)
 
     def sizeHint(self):
-        return QSize(400,400)
+        """Must be implemented"""
+        return QSize(400, 400)
 
     def change_angle_factor(self, value):
+        """Take slider input and reflect the new value in the label"""
         self.parent().a_f_slider_val_label.setText(str(value))
         self.angle_factor = value
         if self.parent().framerate_slider.value() == 0:
@@ -62,6 +64,7 @@ class DotsWidget(QWidget):
             self.next_animation_frame()
 
     def change_halfmax(self, value):
+        """Take slider input and reflect the new value in the label"""
         self.parent().halfmax_slider_val_label.setText(str(value))
         self.halfmax = value
         if self.parent().framerate_slider.value() == 0:
@@ -69,6 +72,7 @@ class DotsWidget(QWidget):
             self.next_animation_frame()
 
     def change_speedmult(self, value):
+        """Take slider input and reflect the new value in the label"""
         self.parent().speedmult_slider_val_label.setText(str(value))
         self.speedmult = value
         if self.parent().framerate_slider.value() == 0:
@@ -76,12 +80,14 @@ class DotsWidget(QWidget):
             self.next_animation_frame()
 
     def change_draw_axes(self, value):
+        """Take checkbox input"""
         self.draw_axes = value
         if self.parent().framerate_slider.value() == 0:
             self.frame_no -= 1
             self.next_animation_frame()
 
     def change_num_dots(self, value):
+        """Take slider input and reflect the new value in the label"""
         self.parent().num_dots_slider_val_label.setText(str(value))
         self.num_dots = value
         if self.parent().framerate_slider.value() == 0:
@@ -89,6 +95,7 @@ class DotsWidget(QWidget):
             self.next_animation_frame()
 
     def change_dot_size(self, value):
+        """Take slider input and reflect the new value in the label"""
         self.parent().dot_size_slider_val_label.setText(str(value))
         self.dot_size = value
         if self.parent().framerate_slider.value() == 0:
@@ -96,6 +103,7 @@ class DotsWidget(QWidget):
             self.next_animation_frame()
 
     def change_x_multiplier(self, value):
+        """Take slider input and reflect the new value in the label"""
         self.parent().x_multiplier_slider_val_label.setText(str(value))
         self.x_multiplier = value
         if self.parent().framerate_slider.value() == 0:
@@ -103,6 +111,7 @@ class DotsWidget(QWidget):
             self.next_animation_frame()
 
     def change_y_multiplier(self, value):
+        """Take slider input and reflect the new value in the label"""
         self.parent().y_multiplier_slider_val_label.setText(str(value))
         self.y_multiplier = value
         if self.parent().framerate_slider.value() == 0:
@@ -110,17 +119,12 @@ class DotsWidget(QWidget):
             self.next_animation_frame()
 
     def next_animation_frame(self):
-        if SAVING:
-            self.grab().save('gifs/1/img{0:03d}.png'.format(self.frame_no), None, 100)
-            # if self.frame_no > 360/SPEED_MULT:
-            if self.frame_no >= 2*self.halfmax / self.speedmult:  # TODO hmmm
-                self.timer.stop()
-                self.parent().close()
-        else:
-            self.update()
+        """Connects to the timer to fire the animation"""
+        self.update()
         self.frame_no += 1
 
-    def record_gif(self):
+    def export_video(self):
+        """Record and save a mp4 video of the current animation"""
         if not EXPORT_AVAILABLE:
             msgbox = QMessageBox(QMessageBox.Information,
                                  "Export not available",
@@ -150,11 +154,14 @@ class DotsWidget(QWidget):
             self.halfmax * 2 + 1,
             self)
         progress_box.setWindowModality(Qt.WindowModal)
+        sleep(0.2)  # sometimes the progressbox wouldn't show. this seems to fix
         duration = self.timer.interval()
         with imageio.get_writer(location, format='mp4', mode='I', fps=1000/duration) as writer:
             self.frame_no = 1
             for i in range(self.halfmax * 2 + 1):
                 progress_box.setValue(i)
+                if progress_box.wasCanceled():
+                    return
                 print(i)
                 im_bytes = QByteArray()
                 buf = QBuffer(im_bytes)
@@ -171,15 +178,11 @@ class DotsWidget(QWidget):
                              "Export finished! Saved to {}".format(location))
         msgbox.exec()
 
-        # imageio.imsave('/tmp/0.gif', frames[0])
-        # imageio.imsave('/tmp/1.gif', frames[1])
-        # with open(location,'wb') as f:
-            # imageio.mimsave(location, frames)
-            # imageio.mimwrite(f, frames, 'gif', duration=5)
-            # fps = 1000/self.timer.interval()
-            # imageio.mimwrite(f, frames, 'ffmpeg', fps=fps, codec='libx264')
-
     def paintEvent(self, *_):
+        """
+        This is called on self.update() and on resize - makes resizes a bit ugly.
+        This method draws every frame and forms the core of the program.
+        """
         pain = QPainter(self)
         pain.setRenderHint(QPainter.Antialiasing, True)
         pain.translate(self.width() / 2, self.height() / 2)  # Make (0,0) centre
@@ -188,13 +191,13 @@ class DotsWidget(QWidget):
             pain.setPen(QPen(QColor(0, 0, 0, 64), 1))
             # Line(x1,y2,x2,y2)
             pain.drawLine(QLineF(0, self.height() / 2, 0, -self.height() / 2))
-            pain.drawLine(QLineF(self.width() / 2, 0, -self.width() / 2,0))
+            pain.drawLine(QLineF(self.width() / 2, 0, -self.width() / 2, 0))
 
         for cur_dot_num in range(self.num_dots):
             frame_no = self.frame_no + cur_dot_num*(180/self.num_dots)/self.speedmult
             angle_off = radians(self.angle_factor/self.num_dots) * cur_dot_num
-            green = ((240/self.num_dots)) * (self.num_dots - cur_dot_num)
-            blue = ((240/self.num_dots)) * cur_dot_num
+            green = (240/self.num_dots) * (self.num_dots - cur_dot_num)
+            blue = (240/self.num_dots) * cur_dot_num
             colour = QColor(0, green, blue)
             pain.setPen(QPen(colour))
             pain.setBrush(QBrush(colour))
@@ -216,13 +219,11 @@ class DotsWidget(QWidget):
             pain.drawEllipse(QPointF(x, y), self.dot_size, self.dot_size)
 
 
-class Window(QWidget):
+class Halcyon(QWidget):
     def __init__(self):
         super().__init__(None)
+        self.setWindowTitle("Halcyon")
         layout = QVBoxLayout(self)
-        # circlewid = CircleWidget()
-        # timer.timeout.connect(circlewid.next_animation_frame)
-        # layout.addWidget(circlewid)
         self.dotwid = DotsWidget()
         self.dotwid.timer = QTimer(self)
         self.dotwid.timer.timeout.connect(self.dotwid.next_animation_frame)
@@ -235,7 +236,6 @@ class Window(QWidget):
         self.angle_factor_slider.setValue(ANGLE_FACTOR_DEF)
         self.a_f_slider_val_label = QLabel(str(self.angle_factor_slider.value()))
         self.angle_factor_slider.valueChanged.connect(self.dotwid.change_angle_factor)
-        # num dots, col dots - gradient
         angle_factor_box.addWidget(self.angle_factor_slider)
         angle_factor_box.addWidget(self.a_f_slider_val_label)
         controls_box.addRow("Angle Factor", angle_factor_box)
@@ -319,8 +319,8 @@ class Window(QWidget):
         reset_button = QPushButton("Reset values")
         reset_button.pressed.connect(self.reset_controls)
 
-        gif_button = QPushButton("Export a video")
-        gif_button.pressed.connect(self.dotwid.record_gif)
+        export_button = QPushButton("Export a video")
+        export_button.pressed.connect(self.dotwid.export_video)
 
         # controls_box.addWidget(reset_button)
         last_controls = QHBoxLayout()
@@ -328,7 +328,7 @@ class Window(QWidget):
         last_controls.addSpacerItem(QSpacerItem(2, 2, QSizePolicy.MinimumExpanding))
         last_controls.addWidget(reset_button)
         last_controls.addSpacerItem(QSpacerItem(2, 2, QSizePolicy.MinimumExpanding))
-        last_controls.addWidget(gif_button)
+        last_controls.addWidget(export_button)
         controls_box.addRow(last_controls)
 
         controls_widget = QWidget(self)
@@ -340,12 +340,9 @@ class Window(QWidget):
         controls_widget.setLayout(controls_box)
 
         layout.addWidget(controls_widget)
-        if SAVING:
-            self.dotwid.timer.start(1)
-        else:
-            self.dotwid.timer.start(100/5)
+        self.dotwid.timer.start(100/FRAMERATE_DEF)
 
-        # TODO toggle showing settings,  colours
+        # TODO toggle showing settings, change colours
 
     def change_framerate(self, value):
         if value == 0:
@@ -355,12 +352,12 @@ class Window(QWidget):
         self.framerate_slider_val_label.setText(str(value))
 
     def reset_controls(self):
-        self.framerate_slider.setValue(5)
+        self.framerate_slider.setValue(FRAMERATE_DEF)
         self.x_multiplier_slider.setValue(X_MULT_DEF)
         self.y_multiplier_slider.setValue(Y_MULT_DEF)
-        self.dot_size_slider.setValue(6)
-        self.num_dots_slider.setValue(40)
-        self.angle_factor_slider.setValue(360)
+        self.dot_size_slider.setValue(DOT_SIZE_DEF)
+        self.num_dots_slider.setValue(NUM_DOTS_DEF)
+        self.angle_factor_slider.setValue(ANGLE_FACTOR_DEF)
         self.speedmult_slider.setValue(SPEED_MULT_DEF)
         self.halfmax_slider.setValue(HALFMAX_DEF)
         self.dotwid.frame_no = 1
@@ -368,7 +365,7 @@ class Window(QWidget):
 
 def main():
     app = QApplication([])
-    win = Window()
+    win = Halcyon()
     win.show()
     return app.exec()
 
