@@ -147,13 +147,13 @@ class DotsWidget(QWidget):
             "the longer the video.",
             "Cancel",
             1,
-            self.halfmax*2,
+            self.halfmax * 2 + 1,
             self)
         progress_box.setWindowModality(Qt.WindowModal)
         duration = self.timer.interval()
         with imageio.get_writer(location, format='mp4', mode='I', fps=1000/duration) as writer:
             self.frame_no = 1
-            for i in range(self.halfmax * 2):
+            for i in range(self.halfmax * 2 + 1):
                 progress_box.setValue(i)
                 print(i)
                 im_bytes = QByteArray()
@@ -161,7 +161,7 @@ class DotsWidget(QWidget):
                 buf.open(QIODevice.WriteOnly)
                 self.grab().save(buf, 'PNG', 100)
                 self.frame_no += 1
-                self.update()
+                # self.update()
                 # frames.append(imageio.imread(im_bytes.data(), 'png'))
                 writer.append_data(imageio.imread(im_bytes.data(), 'png'))
         progress_box.setValue(progress_box.maximum())
