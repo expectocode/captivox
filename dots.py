@@ -147,7 +147,7 @@ class DotsWidget(QWidget):
         if not location.endswith('.mp4'):
             location += '.mp4'
         progress_box = QProgressDialog(
-            "Recording export video.\nNote that the larger the Period, "
+            "Recording export video.\nNote that the larger the period value, "
             "the longer the video.",
             "Cancel",
             1,
