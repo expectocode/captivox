@@ -345,6 +345,7 @@ class Halcyon(QWidget):
         # TODO toggle showing settings, change colours
 
     def change_framerate(self, value):
+        """Take slider input and reflect the new value in the label"""
         if value == 0:
             self.dotwid.timer.stop()
         else:
@@ -352,6 +353,10 @@ class Halcyon(QWidget):
         self.framerate_slider_val_label.setText(str(value))
 
     def reset_controls(self):
+        """
+        Reset all slider controls to their default value
+        Also resets animation frame
+        Does not reset gridlines toggle."""
         self.framerate_slider.setValue(FRAMERATE_DEF)
         self.x_multiplier_slider.setValue(X_MULT_DEF)
         self.y_multiplier_slider.setValue(Y_MULT_DEF)
@@ -364,6 +369,7 @@ class Halcyon(QWidget):
 
 
 def main():
+    """Run the app"""
     app = QApplication([])
     win = Halcyon()
     win.show()
