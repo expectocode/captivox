@@ -1,12 +1,12 @@
-# Halcyon
+# Captivox
 
-![Halcyon heading example gif](halcyon.gif)
+![Captivox heading example gif](captivox.gif)
 
 make a whole lot of cool dot animations using the Power of Parametric™ Maths™ Equations
 
 I want to try!
 -----
-Just run `pip install -r requirements.txt` and then `python3 dots.py`.
+Just run `pip install -r requirements.txt` and then `python3 captivox.py`.
 
 Optionally, run `pip install imageio` if you want to export videos.
 
@@ -22,4 +22,4 @@ Like this!
 Can I contribute?
 -----
 
-the code is in `halcyon.py`, you're welcome to make pull requests. I know I'm not the best designer in the world so I would especially welcome improvements in that area.
+the code is in `captivox.py`, you're welcome to make pull requests. I know I'm not the best designer in the world so I would especially welcome improvements in that area.
