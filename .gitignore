@@ -4,4 +4,4 @@ venv
 __pycache__
 build
 dist
-dots.spec
+captivox.spec

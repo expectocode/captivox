@@ -30,7 +30,6 @@ DRAW_AXES_DEF = False
 COL1_DEF = QColor.fromRgb(0, 240, 0)
 COL2_DEF = QColor.fromRgb(0, 0, 240)
 
-
 def interpolate_hsv(col1, col2, num_middle):
     """
     find colours in between the two and yield QColors including original colours
@@ -48,7 +47,8 @@ def interpolate_hsv(col1, col2, num_middle):
     start_v = col1.value() % 256
 
     delta_h = (col2.hsvHue() % 360) - start_h
-    # https://stackoverflow.com/questions/2593832/how-to-interpolate-hue-values-in-hsv-colour-space
+    # https://stackoverflow.com/questions/2593832/
+    # how-to-interpolate-hue-values-in-hsv-colour-space
     # Can be + or -, and magnitude can be > 180 or < 180
     if delta_h < -180:
         # Between -360 and -180
@@ -284,10 +284,10 @@ class DotsWidget(QWidget):
             pain.drawEllipse(QPointF(x, y), self.dot_size, self.dot_size)
 
 
-class Halcyon(QWidget):
+class Captivox(QWidget):
     def __init__(self):
         super().__init__(None)
-        self.setWindowTitle("Halcyon")
+        self.setWindowTitle("Captivox")
         layout = QVBoxLayout(self)
         self.dotwid = DotsWidget()
         self.dotwid.timer = QTimer(self)
@@ -511,7 +511,7 @@ class Halcyon(QWidget):
 def main():
     """Run the app"""
     app = QApplication([])
-    win = Halcyon()
+    win = Captivox()
     win.show()
     return app.exec()
 

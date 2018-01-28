@@ -6,11 +6,11 @@ make a whole lot of cool dot animations using the Power of Parametricâ„¢ Mathsâ„
 
 I want to try!
 -----
-Just run `pip install -r requirements.txt` and then `python3 captivox.py`.
+Just run `pip install --user PyQt5` and then `python3 captivox.py`.
 
-Optionally, run `pip install imageio` if you want to export videos.
+Optionally, run `pip install --user imageio` if you want to export videos. To install both in one command, use `pip install --user -r requirements.txt`.
 
-Oh, and be sure to use pip for python3, not python2. This project is python3 only.
+Oh, and be sure to use pip for python3, not python2. This project is python3 only. This might mean using `pip3` instead of `pip`.
 
 What does it look like?
 -----
