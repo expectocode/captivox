@@ -25,6 +25,8 @@ HALFMAX_DEF = 180
 SPEED_MULT_DEF = 3
 FRAMERATE_DEF = 5
 AXES_DEF = False
+JOIN_ENDS_DEF = False
+DRAW_AXES_DEF = False
 
 
 class DotsWidget(QWidget):
@@ -46,6 +48,7 @@ class DotsWidget(QWidget):
         self.halfmax = HALFMAX_DEF
         self.speedmult = SPEED_MULT_DEF
         self.draw_axes = AXES_DEF
+        self.join_end_dots = JOIN_ENDS_DEF
 
     def minimumSizeHint(self):
         """Must be implemented"""
@@ -82,6 +85,13 @@ class DotsWidget(QWidget):
     def change_draw_axes(self, value):
         """Take checkbox input"""
         self.draw_axes = value
+        if self.parent().framerate_slider.value() == 0:
+            self.frame_no -= 1
+            self.next_animation_frame()
+
+    def change_join_end_dots(self, value):
+        """Take checkbox input"""
+        self.join_end_dots = value
         if self.parent().framerate_slider.value() == 0:
             self.frame_no -= 1
             self.next_animation_frame()
@@ -194,8 +204,12 @@ class DotsWidget(QWidget):
             pain.drawLine(QLineF(self.width() / 2, 0, -self.width() / 2, 0))
 
         for cur_dot_num in range(self.num_dots):
-            frame_no = self.frame_no + cur_dot_num*(180/self.num_dots)/self.speedmult
-            angle_off = radians(self.angle_factor/self.num_dots) * cur_dot_num
+            if self.join_end_dots:
+                angle_off = radians(self.angle_factor/(self.num_dots-1)) * cur_dot_num
+                frame_no = self.frame_no + cur_dot_num*(180/(self.num_dots-1))/self.speedmult
+            else:
+                angle_off = radians(self.angle_factor/self.num_dots) * cur_dot_num
+                frame_no = self.frame_no + cur_dot_num*(180/self.num_dots)/self.speedmult
             green = (240/self.num_dots) * (self.num_dots - cur_dot_num)
             blue = (240/self.num_dots) * cur_dot_num
             colour = QColor(0, green, blue)
@@ -242,6 +256,7 @@ class Halcyon(QWidget):
 
         num_dots_box = QHBoxLayout()
         self.num_dots_slider = QSlider(Qt.Horizontal)
+        self.num_dots_slider.setMinimum(2)
         self.num_dots_slider.setMaximum(200)
         self.num_dots_slider.setValue(NUM_DOTS_DEF)
         self.num_dots_slider.valueChanged.connect(self.dotwid.change_num_dots)
@@ -313,8 +328,12 @@ class Halcyon(QWidget):
         controls_box.addRow("Speed", speedmult_box)
 
         self.draw_axes_checkbox = QCheckBox("Show axes")
+        self.draw_axes_checkbox.setChecked(DRAW_AXES_DEF)
         self.draw_axes_checkbox.stateChanged.connect(self.dotwid.change_draw_axes)
-        # controls_box.addWidget(self.draw_axes_checkbox)
+
+        self.join_end_dots_checkbox = QCheckBox("Join end dots")
+        self.draw_axes_checkbox.setChecked(JOIN_ENDS_DEF)
+        self.join_end_dots_checkbox.stateChanged.connect(self.dotwid.change_join_end_dots)
 
         reset_button = QPushButton("Reset values")
         reset_button.pressed.connect(self.reset_controls)
@@ -325,6 +344,7 @@ class Halcyon(QWidget):
         # controls_box.addWidget(reset_button)
         last_controls = QHBoxLayout()
         last_controls.addWidget(self.draw_axes_checkbox)
+        last_controls.addWidget(self.join_end_dots_checkbox)
         last_controls.addSpacerItem(QSpacerItem(2, 2, QSizePolicy.MinimumExpanding))
         last_controls.addWidget(reset_button)
         last_controls.addSpacerItem(QSpacerItem(2, 2, QSizePolicy.MinimumExpanding))
@@ -356,7 +376,7 @@ class Halcyon(QWidget):
         """
         Reset all slider controls to their default value
         Also resets animation frame
-        Does not reset gridlines toggle."""
+        """
         self.framerate_slider.setValue(FRAMERATE_DEF)
         self.x_multiplier_slider.setValue(X_MULT_DEF)
         self.y_multiplier_slider.setValue(Y_MULT_DEF)
@@ -365,6 +385,8 @@ class Halcyon(QWidget):
         self.angle_factor_slider.setValue(ANGLE_FACTOR_DEF)
         self.speedmult_slider.setValue(SPEED_MULT_DEF)
         self.halfmax_slider.setValue(HALFMAX_DEF)
+        self.join_end_dots_checkbox.setChecked(JOIN_ENDS_DEF)
+        self.draw_axes_checkbox.setChecked(DRAW_AXES_DEF)
         self.dotwid.frame_no = 1
 
 
