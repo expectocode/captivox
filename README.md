@@ -16,9 +16,10 @@ What does it look like?
 -----
 
 Like this!
+
 ![Screenshot of the app](screenshot.png)
 
 Can I contribute?
 -----
 
-the code is in `dots.py`, you're welcome to make pull requests. I know I'm not the best designer in the world so I would especially welcome improvements in that area.
+the code is in `halcyon.py`, you're welcome to make pull requests. I know I'm not the best designer in the world so I would especially welcome improvements in that area.

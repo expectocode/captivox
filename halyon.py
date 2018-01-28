@@ -5,7 +5,7 @@ from PyQt5.QtGui import QPainter, QPalette, QPen, QColor, QBrush
 from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QFormLayout,
                              QSizePolicy, QApplication, QSlider, QLabel,
                              QPushButton, QCheckBox, QSpacerItem, QFileDialog,
-                             QMessageBox, QProgressDialog)
+                             QMessageBox, QProgressDialog, QColorDialog)
 from PyQt5.QtCore import QSize, QTimer, QPointF, Qt, \
                          QLineF, QByteArray, QBuffer, QIODevice
 EXPORT_AVAILABLE = True
@@ -27,6 +27,51 @@ FRAMERATE_DEF = 5
 AXES_DEF = False
 JOIN_ENDS_DEF = False
 DRAW_AXES_DEF = False
+COL1_DEF = QColor.fromRgb(0, 240, 0)
+COL2_DEF = QColor.fromRgb(0, 0, 240)
+
+
+def interpolate_hsv(col1, col2, num_middle):
+    """
+    find colours in between the two and yield QColors including original colours
+    expects QColors, returns QColors from col1 to col2
+    expects alpha to always be 255
+    """
+    if num_middle < 0:
+        raise ValueError
+
+    assert col1.isValid()
+    assert col2.isValid()
+
+    start_h = col1.hsvHue() % 360
+    start_s = col1.hsvSaturation() % 256
+    start_v = col1.value() % 256
+
+    delta_h = (col2.hsvHue() % 360) - start_h
+    # https://stackoverflow.com/questions/2593832/how-to-interpolate-hue-values-in-hsv-colour-space
+    # Can be + or -, and magnitude can be > 180 or < 180
+    if delta_h < -180:
+        # Between -360 and -180
+        # eg 10 - 300 = -290
+        # we should go the other way around
+        # eg 70
+        delta_h = 360 + delta_h
+    elif delta_h > 180:
+        # delta h between 180 and 360, we should go the other way around
+        delta_h = - 360 + delta_h
+
+    delta_s = (col2.hsvSaturation() % 256) - start_s
+    delta_v = (col2.value() % 256) - start_v
+
+    yield col1
+    for i in range(1, num_middle+1):
+        frac = i/num_middle
+        yield QColor.fromHsv(
+                (start_h + delta_h*frac) % 360,
+                (start_s + delta_s*frac) % 256,
+                (start_v + delta_v*frac) % 256,
+        )
+    yield col2
 
 
 class DotsWidget(QWidget):
@@ -49,6 +94,8 @@ class DotsWidget(QWidget):
         self.speedmult = SPEED_MULT_DEF
         self.draw_axes = AXES_DEF
         self.join_end_dots = JOIN_ENDS_DEF
+        self.col1 = COL1_DEF
+        self.col2 = COL2_DEF
 
     def minimumSizeHint(self):
         """Must be implemented"""
@@ -203,6 +250,9 @@ class DotsWidget(QWidget):
             pain.drawLine(QLineF(0, self.height() / 2, 0, -self.height() / 2))
             pain.drawLine(QLineF(self.width() / 2, 0, -self.width() / 2, 0))
 
+        colours = interpolate_hsv(self.col1, self.col2, self.num_dots - 2)
+        # self.num_dots slider minimum is 2, so middle num minimum 0 which is ok
+
         for cur_dot_num in range(self.num_dots):
             if self.join_end_dots:
                 angle_off = radians(self.angle_factor/(self.num_dots-1)) * cur_dot_num
@@ -210,9 +260,10 @@ class DotsWidget(QWidget):
             else:
                 angle_off = radians(self.angle_factor/self.num_dots) * cur_dot_num
                 frame_no = self.frame_no + cur_dot_num*(180/self.num_dots)/self.speedmult
-            green = (240/self.num_dots) * (self.num_dots - cur_dot_num)
-            blue = (240/self.num_dots) * cur_dot_num
-            colour = QColor(0, green, blue)
+            # green = (240/self.num_dots) * (self.num_dots - cur_dot_num)
+            # blue = (240/self.num_dots) * cur_dot_num
+            # colour = QColor(0, green, blue)
+            colour = next(colours).toRgb()
             pain.setPen(QPen(colour))
             pain.setBrush(QBrush(colour))
             # progress = (cos(radians(SPEED_MULT * frame_no)) + 1)/2 * 180
@@ -335,6 +386,37 @@ class Halcyon(QWidget):
         self.draw_axes_checkbox.setChecked(JOIN_ENDS_DEF)
         self.join_end_dots_checkbox.stateChanged.connect(self.dotwid.change_join_end_dots)
 
+        self.change_col1_button = QPushButton("")
+        self.change_col1_button.setFlat(True)
+        pal = QPalette()
+        pal.setColor(QPalette.Button, COL1_DEF)
+        self.change_col1_button.setPalette(pal)
+        self.change_col1_button.setAutoFillBackground(True)
+        self.change_col1_button.pressed.connect(self.change_col1)
+
+        self.change_col2_button = QPushButton("")
+        self.change_col2_button.setFlat(True)
+        pal = QPalette()
+        pal.setColor(QPalette.Button, COL2_DEF)
+        self.change_col2_button.setPalette(pal)
+        self.change_col2_button.setAutoFillBackground(True)
+        self.change_col2_button.pressed.connect(self.change_col2)
+
+        smaller_options_box = QHBoxLayout()
+        smaller_options_box.addWidget(self.draw_axes_checkbox)
+        smaller_options_box.addWidget(self.join_end_dots_checkbox)
+        smaller_options_box.addSpacerItem(QSpacerItem(2, 2, QSizePolicy.MinimumExpanding))
+        smaller_options_box.addWidget(self.change_col1_button)
+        smaller_options_box.addWidget(self.change_col2_button)
+        controls_box.addRow(smaller_options_box)
+
+        # colour_options_box = QHBoxLayout()
+        # colour_options_box.addSpacerItem(QSpacerItem(2, 2, QSizePolicy.MinimumExpanding))
+        # colour_options_box.addWidget(self.change_col1_button)
+        # colour_options_box.addWidget(self.change_col2_button)
+        # colour_options_box.addSpacerItem(QSpacerItem(2, 2, QSizePolicy.MinimumExpanding))
+        # controls_box.addRow(colour_options_box)
+
         reset_button = QPushButton("Reset values")
         reset_button.pressed.connect(self.reset_controls)
 
@@ -343,8 +425,8 @@ class Halcyon(QWidget):
 
         # controls_box.addWidget(reset_button)
         last_controls = QHBoxLayout()
-        last_controls.addWidget(self.draw_axes_checkbox)
-        last_controls.addWidget(self.join_end_dots_checkbox)
+        # last_controls.addWidget(self.draw_axes_checkbox)
+        # last_controls.addWidget(self.join_end_dots_checkbox)
         last_controls.addSpacerItem(QSpacerItem(2, 2, QSizePolicy.MinimumExpanding))
         last_controls.addWidget(reset_button)
         last_controls.addSpacerItem(QSpacerItem(2, 2, QSizePolicy.MinimumExpanding))
@@ -372,6 +454,34 @@ class Halcyon(QWidget):
             self.dotwid.timer.start(100/value)
         self.framerate_slider_val_label.setText(str(value))
 
+    def change_col1(self):
+        colour = QColorDialog.getColor(self.dotwid.col1,
+                                       self,
+                                       "Choose a new primary colour")
+        if not colour.isValid():
+            return
+        self.dotwid.col1 = colour
+        p = self.change_col1_button.palette()
+        p.setColor(QPalette.Button, colour)
+        self.change_col1_button.setPalette(p)
+        if self.framerate_slider.value() == 0:
+            self.dotwid.frame_no -= 1
+            self.dotwid.next_animation_frame()
+
+    def change_col2(self):
+        colour = QColorDialog.getColor(self.dotwid.col2,
+                                       self,
+                                       "Choose a new secondary colour")
+        if not colour.isValid():
+            return
+        self.dotwid.col2 = colour
+        p = self.change_col2_button.palette()
+        p.setColor(QPalette.Button, colour)
+        self.change_col2_button.setPalette(p)
+        if self.framerate_slider.value() == 0:
+            self.dotwid.frame_no -= 1
+            self.dotwid.next_animation_frame()
+
     def reset_controls(self):
         """
         Reset all slider controls to their default value
@@ -387,6 +497,14 @@ class Halcyon(QWidget):
         self.halfmax_slider.setValue(HALFMAX_DEF)
         self.join_end_dots_checkbox.setChecked(JOIN_ENDS_DEF)
         self.draw_axes_checkbox.setChecked(DRAW_AXES_DEF)
+        self.dotwid.col1 = COL1_DEF
+        p = self.change_col1_button.palette()
+        p.setColor(QPalette.Button, COL1_DEF)
+        self.change_col1_button.setPalette(p)
+        self.dotwid.col2 = COL2_DEF
+        p = self.change_col2_button.palette()
+        p.setColor(QPalette.Button, COL2_DEF)
+        self.change_col2_button.setPalette(p)
         self.dotwid.frame_no = 1
 
 
