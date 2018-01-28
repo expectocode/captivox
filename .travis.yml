@@ -4,7 +4,6 @@ python:
 - '2.7'
 before_install:
 - which python
-- which python3
 - brew install python3 --universal --framework
 - brew install wget
 - which python3
