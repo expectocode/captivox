@@ -1,0 +1,6 @@
+language: python
+python:
+    - '3.5'
+os: osx
+install: pip install PyInstaller
+script: pyinstaller --onefile --windowed dots.py
