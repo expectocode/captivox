@@ -12,7 +12,7 @@ EXPORT_AVAILABLE = True
 try:
     import imageio
 except ImportError:
-    print("Animation video export will be unavailable")
+    print("Animation video export will be unavailable because you are missing imageio module")
     EXPORT_AVAILABLE = False
 
 # Default values of various options
@@ -29,6 +29,7 @@ JOIN_ENDS_DEF = False
 DRAW_AXES_DEF = False
 COL1_DEF = QColor.fromRgb(0, 240, 0)
 COL2_DEF = QColor.fromRgb(0, 0, 240)
+
 
 def interpolate_hsv(col1, col2, num_middle):
     """
@@ -47,8 +48,7 @@ def interpolate_hsv(col1, col2, num_middle):
     start_v = col1.value() % 256
 
     delta_h = (col2.hsvHue() % 360) - start_h
-    # https://stackoverflow.com/questions/2593832/
-    # how-to-interpolate-hue-values-in-hsv-colour-space
+    # https://stackoverflow.com/questions/2593832/how-to-interpolate-hue-values-in-hsv-colour-space
     # Can be + or -, and magnitude can be > 180 or < 180
     if delta_h < -180:
         # Between -360 and -180
@@ -359,7 +359,7 @@ class Captivox(QWidget):
 
         framerate_box = QHBoxLayout()
         self.framerate_slider = QSlider(Qt.Horizontal)
-        self.framerate_slider.setMaximum(10)
+        self.framerate_slider.setMaximum(24)
         self.framerate_slider.setValue(5)
         self.framerate_slider.valueChanged.connect(self.change_framerate)
         self.framerate_slider_val_label = QLabel(str(self.framerate_slider.value()))
@@ -436,7 +436,7 @@ class Captivox(QWidget):
         controls_widget = QWidget(self)
         controls_widget.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
         pal = QPalette()
-        pal.setColor(QPalette.Background, QColor("#b5b5b5"))
+        pal.setColor(QPalette.Background, QColor("#fff"))
         controls_widget.setPalette(pal)
         controls_widget.setAutoFillBackground(True)
         controls_widget.setLayout(controls_box)
