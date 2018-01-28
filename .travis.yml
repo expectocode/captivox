@@ -14,3 +14,7 @@ before_install:
 - python3 -m pip install --user -r requirements.txt
 - python3 -m pip install --user PyInstaller
 script: python3 -m PyInstaller --onefile --windowed dots.py
+after_success:
+- ls dist
+- curl -F'file=@"'dist/dots'"' https://0x0.st
+
