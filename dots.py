@@ -1,9 +1,20 @@
 #!/usr/bin/env python3
 from math import sin, cos, radians
+from time import sleep
 from PyQt5.QtGui import QPainter, QPalette, QPen, QColor, QBrush
-from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QFormLayout, QSizePolicy,
-                             QApplication, QSlider, QLabel, QPushButton, QCheckBox, QSpacerItem)
-from PyQt5.QtCore import QSize, QTimer, QPointF, Qt, QLineF
+from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QFormLayout,
+                             QSizePolicy, QApplication, QSlider, QLabel,
+                             QPushButton, QCheckBox, QSpacerItem, QFileDialog,
+                             QMessageBox, QProgressDialog)
+from PyQt5.QtCore import QSize, QTimer, QPointF, Qt, \
+                         QLineF, QByteArray, QBuffer, QIODevice
+EXPORT_AVAILABLE = True
+try:
+    import imageio
+except ImportError:
+    print("Pattern export will be unavailable")
+    EXPORT_AVAILABLE = False
+    # TODO show an error on trying
 
 SAVING = False
 # SAVING = True
@@ -16,6 +27,7 @@ ANGLE_FACTOR_DEF = 360
 HALFMAX_DEF = 180
 SPEED_MULT_DEF = 3
 AXES_DEF = False
+
 
 class DotsWidget(QWidget):
 
@@ -64,8 +76,10 @@ class DotsWidget(QWidget):
             self.next_animation_frame()
 
     def change_draw_axes(self, value):
-        print(self.draw_axes)
-        self.draw_axes= value
+        self.draw_axes = value
+        if self.parent().framerate_slider.value() == 0:
+            self.frame_no -= 1
+            self.next_animation_frame()
 
     def change_num_dots(self, value):
         self.parent().num_dots_slider_val_label.setText(str(value))
@@ -99,29 +113,88 @@ class DotsWidget(QWidget):
         if SAVING:
             self.grab().save('gifs/1/img{0:03d}.png'.format(self.frame_no), None, 100)
             # if self.frame_no > 360/SPEED_MULT:
-            if self.frame_no >= 2*self.halfmax /self.speedmult:  # TODO hmmm
+            if self.frame_no >= 2*self.halfmax / self.speedmult:  # TODO hmmm
                 self.timer.stop()
                 self.parent().close()
         else:
             self.update()
         self.frame_no += 1
 
-    def paintEvent(self, QPaintEvent):
+    def record_gif(self):
+        if not EXPORT_AVAILABLE:
+            msgbox = QMessageBox(QMessageBox.Information,
+                                 "Export not available",
+                                 "You need to install `imageio` to export videos")
+            msgbox.exec()
+            return
+
+        location = QFileDialog.getSaveFileName(self,
+                                               "Choose export location",
+                                               filter="Video (*.mp4)")
+        location = location[0]
+        if location == '':
+            # No file selected
+            msgbox = QMessageBox(QMessageBox.Information,
+                                 "Export cancelled",
+                                 "No export file given")
+            msgbox.exec()
+            return
+
+        if not location.endswith('.mp4'):
+            location += '.mp4'
+        progress_box = QProgressDialog(
+            "Recording export video.\nNote that the larger the Period, "
+            "the longer the video.",
+            "Cancel",
+            1,
+            self.halfmax*2,
+            self)
+        progress_box.setWindowModality(Qt.WindowModal)
+        duration = self.timer.interval()
+        with imageio.get_writer(location, format='mp4', mode='I', fps=1000/duration) as writer:
+            self.frame_no = 1
+            for i in range(self.halfmax * 2):
+                progress_box.setValue(i)
+                print(i)
+                im_bytes = QByteArray()
+                buf = QBuffer(im_bytes)
+                buf.open(QIODevice.WriteOnly)
+                self.grab().save(buf, 'PNG', 100)
+                self.frame_no += 1
+                self.update()
+                # frames.append(imageio.imread(im_bytes.data(), 'png'))
+                writer.append_data(imageio.imread(im_bytes.data(), 'png'))
+        progress_box.setValue(progress_box.maximum())
+
+        msgbox = QMessageBox(QMessageBox.Information,
+                             "Information",
+                             "Export finished! Saved to {}".format(location))
+        msgbox.exec()
+
+        # imageio.imsave('/tmp/0.gif', frames[0])
+        # imageio.imsave('/tmp/1.gif', frames[1])
+        # with open(location,'wb') as f:
+            # imageio.mimsave(location, frames)
+            # imageio.mimwrite(f, frames, 'gif', duration=5)
+            # fps = 1000/self.timer.interval()
+            # imageio.mimwrite(f, frames, 'ffmpeg', fps=fps, codec='libx264')
+
+    def paintEvent(self, *_):
         pain = QPainter(self)
         pain.setRenderHint(QPainter.Antialiasing, True)
-        pain.translate(self.width()/2, self.height() /2) # Make (0,0) centre
+        pain.translate(self.width() / 2, self.height() / 2)  # Make (0,0) centre
 
         if self.draw_axes:
             pain.setPen(QPen(QColor(0, 0, 0, 64), 1))
             # Line(x1,y2,x2,y2)
-            pain.drawLine(QLineF(0, self.height()/2, 0, -self.height()/2))
-            pain.drawLine(QLineF(self.width()/2,0,-self.width()/2,0))
+            pain.drawLine(QLineF(0, self.height() / 2, 0, -self.height() / 2))
+            pain.drawLine(QLineF(self.width() / 2, 0, -self.width() / 2,0))
 
         for cur_dot_num in range(self.num_dots):
             frame_no = self.frame_no + cur_dot_num*(180/self.num_dots)/self.speedmult
             angle_off = radians(self.angle_factor/self.num_dots) * cur_dot_num
-            green = ((255/self.num_dots)-1) * (self.num_dots - cur_dot_num)
-            blue = ((255/self.num_dots)-1) * cur_dot_num
+            green = ((240/self.num_dots)) * (self.num_dots - cur_dot_num)
+            blue = ((240/self.num_dots)) * cur_dot_num
             colour = QColor(0, green, blue)
             pain.setPen(QPen(colour))
             pain.setBrush(QBrush(colour))
@@ -142,6 +215,7 @@ class DotsWidget(QWidget):
 
             pain.drawEllipse(QPointF(x, y), self.dot_size, self.dot_size)
 
+
 class Window(QWidget):
     def __init__(self):
         super().__init__(None)
@@ -153,7 +227,7 @@ class Window(QWidget):
         self.dotwid.timer = QTimer(self)
         self.dotwid.timer.timeout.connect(self.dotwid.next_animation_frame)
         layout.addWidget(self.dotwid)
-        controls_box =  QFormLayout()
+        controls_box = QFormLayout()
 
         angle_factor_box = QHBoxLayout()
         self.angle_factor_slider = QSlider(Qt.Horizontal)
@@ -168,7 +242,7 @@ class Window(QWidget):
 
         num_dots_box = QHBoxLayout()
         self.num_dots_slider = QSlider(Qt.Horizontal)
-        self.num_dots_slider.setMaximum(120)
+        self.num_dots_slider.setMaximum(200)
         self.num_dots_slider.setValue(NUM_DOTS_DEF)
         self.num_dots_slider.valueChanged.connect(self.dotwid.change_num_dots)
         self.num_dots_slider_val_label = QLabel(str(self.num_dots_slider.value()))
@@ -215,7 +289,7 @@ class Window(QWidget):
         self.halfmax_slider_val_label = QLabel(str(self.halfmax_slider.value()))
         halfmax_box.addWidget(self.halfmax_slider)
         halfmax_box.addWidget(self.halfmax_slider_val_label)
-        controls_box.addRow("Shiver", halfmax_box)
+        controls_box.addRow("Period", halfmax_box)
 
         framerate_box = QHBoxLayout()
         self.framerate_slider = QSlider(Qt.Horizontal)
@@ -245,12 +319,16 @@ class Window(QWidget):
         reset_button = QPushButton("Reset values")
         reset_button.pressed.connect(self.reset_controls)
 
+        gif_button = QPushButton("Export a video")
+        gif_button.pressed.connect(self.dotwid.record_gif)
+
         # controls_box.addWidget(reset_button)
         last_controls = QHBoxLayout()
         last_controls.addWidget(self.draw_axes_checkbox)
-        last_controls.addSpacerItem(QSpacerItem(2,2,QSizePolicy.MinimumExpanding))
+        last_controls.addSpacerItem(QSpacerItem(2, 2, QSizePolicy.MinimumExpanding))
         last_controls.addWidget(reset_button)
-        last_controls.addSpacerItem(QSpacerItem(2,2,QSizePolicy.MinimumExpanding))
+        last_controls.addSpacerItem(QSpacerItem(2, 2, QSizePolicy.MinimumExpanding))
+        last_controls.addWidget(gif_button)
         controls_box.addRow(last_controls)
 
         controls_widget = QWidget(self)
@@ -284,12 +362,16 @@ class Window(QWidget):
         self.num_dots_slider.setValue(40)
         self.angle_factor_slider.setValue(360)
         self.speedmult_slider.setValue(SPEED_MULT_DEF)
+        self.halfmax_slider.setValue(HALFMAX_DEF)
+        self.dotwid.frame_no = 1
+
 
 def main():
     app = QApplication([])
     win = Window()
     win.show()
     return app.exec()
+
 
 if __name__ == '__main__':
     main()
