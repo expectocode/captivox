@@ -480,29 +480,31 @@ class Captivox(QWidget):
         self.delay_slider_val_label.setText(str(value))
 
     def change_col1(self):
+        """Take QColorDialog input and update various displays"""
         colour = QColorDialog.getColor(self.dotwid.col1,
                                        self,
                                        "Choose a new primary colour")
         if not colour.isValid():
             return
         self.dotwid.col1 = colour
-        p = self.change_col1_button.palette()
-        p.setColor(QPalette.Button, colour)
-        self.change_col1_button.setPalette(p)
+        pal = self.change_col1_button.palette()
+        pal.setColor(QPalette.Button, colour)
+        self.change_col1_button.setPalette(pal)
         if self.speedmult_slider.value() == 0:
             self.dotwid.frame_no -= 1
             self.dotwid.next_animation_frame()
 
     def change_col2(self):
+        """Take QColorDialog input and update various displays"""
         colour = QColorDialog.getColor(self.dotwid.col2,
                                        self,
                                        "Choose a new secondary colour")
         if not colour.isValid():
             return
         self.dotwid.col2 = colour
-        p = self.change_col2_button.palette()
-        p.setColor(QPalette.Button, colour)
-        self.change_col2_button.setPalette(p)
+        pal = self.change_col2_button.palette()
+        pal.setColor(QPalette.Button, colour)
+        self.change_col2_button.setPalette(pal)
         if self.speedmult_slider.value() == 0:
             self.dotwid.frame_no -= 1
             self.dotwid.next_animation_frame()
@@ -523,13 +525,13 @@ class Captivox(QWidget):
         self.join_end_dots_checkbox.setChecked(JOIN_ENDS_DEF)
         self.draw_axes_checkbox.setChecked(DRAW_AXES_DEF)
         self.dotwid.col1 = COL1_DEF
-        p = self.change_col1_button.palette()
-        p.setColor(QPalette.Button, COL1_DEF)
-        self.change_col1_button.setPalette(p)
+        pal = self.change_col1_button.palette()
+        pal.setColor(QPalette.Button, COL1_DEF)
+        self.change_col1_button.setPalette(pal)
         self.dotwid.col2 = COL2_DEF
-        p = self.change_col2_button.palette()
-        p.setColor(QPalette.Button, COL2_DEF)
-        self.change_col2_button.setPalette(p)
+        pal = self.change_col2_button.palette()
+        pal.setColor(QPalette.Button, COL2_DEF)
+        self.change_col2_button.setPalette(pal)
         self.dotwid.frame_no = 1
 
 
