@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from math import sin, cos, radians
 import sys
-from os import path
+from os import path, remove
 from time import sleep
 from PyQt5.QtGui import QPainter, QPalette, QPen, QColor, QBrush, QIcon
 from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QFormLayout,
@@ -29,8 +29,8 @@ DELAY_DEF = 35
 AXES_DEF = False
 JOIN_ENDS_DEF = False
 DRAW_AXES_DEF = False
-COL1_DEF = QColor.fromRgb(0, 240, 0)
-COL2_DEF = QColor.fromRgb(0, 0, 240)
+COL1_DEF = QColor.fromRgb(0, 180, 0)
+COL2_DEF = QColor.fromRgb(0, 0, 180)
 
 
 def resource_path(relative_path):
@@ -235,13 +235,14 @@ class DotsWidget(QWidget):
             self.halfmax * 2 + 1,
             self)
         progress_box.setWindowModality(Qt.WindowModal)
-        sleep(0.2)  # sometimes the progressbox wouldn't show. this seems to fix
+        # sleep(0.2)  # sometimes the progressbox wouldn't show. this seems to fix
         duration = self.timer.interval()
         with imageio.get_writer(location, format='mp4', mode='I', fps=1000/duration) as writer:
             self.frame_no = 1
             for i in range(self.halfmax * 2 + 1):
                 progress_box.setValue(i)
                 if progress_box.wasCanceled():
+                    remove(location)
                     return
                 print(i)
                 im_bytes = QByteArray()
