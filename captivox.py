@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from math import sin, cos, radians
 from time import sleep
-from PyQt5.QtGui import QPainter, QPalette, QPen, QColor, QBrush
+from PyQt5.QtGui import QPainter, QPalette, QPen, QColor, QBrush, QIcon
 from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QFormLayout,
                              QSizePolicy, QApplication, QSlider, QLabel,
                              QPushButton, QCheckBox, QSpacerItem, QFileDialog,
@@ -193,6 +193,7 @@ class DotsWidget(QWidget):
         location = QFileDialog.getSaveFileName(self,
                                                "Choose export location",
                                                filter="Video (*.mp4)")
+
         location = location[0]
         if location == '':
             # No file selected
@@ -241,15 +242,15 @@ class DotsWidget(QWidget):
         This is called on self.update() and on resize - makes resizes a bit ugly.
         This method draws every frame and forms the core of the program.
         """
-        pain = QPainter(self)
-        pain.setRenderHint(QPainter.Antialiasing, True)
-        pain.translate(self.width() / 2, self.height() / 2)  # Make (0,0) centre
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.translate(self.width() / 2, self.height() / 2)  # Make (0,0) centre
 
         if self.draw_axes:
-            pain.setPen(QPen(QColor(0, 0, 0, 64), 1))
+            painter.setPen(QPen(QColor(0, 0, 0, 64), 1))
             # Line(x1,y2,x2,y2)
-            pain.drawLine(QLineF(0, self.height() / 2, 0, -self.height() / 2))
-            pain.drawLine(QLineF(self.width() / 2, 0, -self.width() / 2, 0))
+            painter.drawLine(QLineF(0, self.height() / 2, 0, -self.height() / 2))
+            painter.drawLine(QLineF(self.width() / 2, 0, -self.width() / 2, 0))
 
         colours = interpolate_hsv(self.col1, self.col2, self.num_dots - 2)
         # self.num_dots slider minimum is 2, so middle num minimum 0 which is ok
@@ -265,8 +266,8 @@ class DotsWidget(QWidget):
             # blue = (240/self.num_dots) * cur_dot_num
             # colour = QColor(0, green, blue)
             colour = next(colours).toRgb()
-            pain.setPen(QPen(colour))
-            pain.setBrush(QBrush(colour))
+            painter.setPen(QPen(colour))
+            painter.setBrush(QBrush(colour))
             # progress = (cos(radians(SPEED_MULT * frame_no)) + 1)/2 * 180
             progress = abs((frame_no * self.speedmult) % (2*self.halfmax)-self.halfmax)
             # Progress oscillates every 360/speed_mult frames
@@ -282,7 +283,7 @@ class DotsWidget(QWidget):
             x = cos(radians(self.x_multiplier * progress)) * width / 2
             y = cos(radians(self.y_multiplier * progress)) * height / 2
 
-            pain.drawEllipse(QPointF(x, y), self.dot_size, self.dot_size)
+            painter.drawEllipse(QPointF(x, y), self.dot_size, self.dot_size)
 
 
 class Captivox(QWidget):
@@ -444,6 +445,9 @@ class Captivox(QWidget):
 
         layout.addWidget(controls_widget)
         self.dotwid.timer.start(100/FRAMERATE_DEF)
+
+        # icon used for the Window
+        self.setWindowIcon(QIcon("icon.png"))
 
         # TODO toggle showing settings, change colours
 
