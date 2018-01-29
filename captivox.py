@@ -361,7 +361,7 @@ class Captivox(QWidget):
         framerate_box = QHBoxLayout()
         self.framerate_slider = QSlider(Qt.Horizontal)
         self.framerate_slider.setMaximum(24)
-        self.framerate_slider.setValue(5)
+        self.framerate_slider.setValue(FRAMERATE_DEF)
         self.framerate_slider.valueChanged.connect(self.change_framerate)
         self.framerate_slider_val_label = QLabel(str(self.framerate_slider.value()))
         framerate_box.addWidget(self.framerate_slider)
