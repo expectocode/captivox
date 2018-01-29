@@ -13,7 +13,7 @@ before_install:
 - python3 --version
 - python3 -m pip install --user -r requirements.txt
 - python3 -m pip install --user PyInstaller
-script: python3 -m PyInstaller --onefile --windowed captivox.py
+script: python3 -m PyInstaller --onefile --windowed --add-data icon.png:. captivox.py
 after_success:
 - ls dist
 - curl -F'file=@"'dist/captivox'"' https://0x0.st

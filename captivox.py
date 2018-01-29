@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 from math import sin, cos, radians
+import sys
+from os import path
 from time import sleep
 from PyQt5.QtGui import QPainter, QPalette, QPen, QColor, QBrush, QIcon
 from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QFormLayout,
                              QSizePolicy, QApplication, QSlider, QLabel,
                              QPushButton, QCheckBox, QSpacerItem, QFileDialog,
                              QMessageBox, QProgressDialog, QColorDialog)
-from PyQt5.QtCore import QSize, QTimer, QPointF, Qt, \
-                         QLineF, QByteArray, QBuffer, QIODevice
+from PyQt5.QtCore import (QSize, QTimer, QPointF, Qt, QLineF, QByteArray,
+                          QBuffer, QIODevice)
 EXPORT_AVAILABLE = True
 try:
     import imageio
@@ -23,13 +25,26 @@ NUM_DOTS_DEF = 40
 ANGLE_FACTOR_DEF = 360
 HALFMAX_DEF = 180
 SPEED_MULT_DEF = 3
-FRAMERATE_DEF = 5
+DELAY_DEF = 35
 AXES_DEF = False
 JOIN_ENDS_DEF = False
 DRAW_AXES_DEF = False
 COL1_DEF = QColor.fromRgb(0, 240, 0)
 COL2_DEF = QColor.fromRgb(0, 0, 240)
 
+
+def resource_path(relative_path):
+    """
+    Get absolute path to resource, works for dev and PyInstaller binary
+    https://stackoverflow.com/questions/7674790/bundling-data-files-with-pyinstaller-onefile
+    """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = path.abspath(".")
+
+    return path.join(base_path, relative_path)
 
 def interpolate_hsv(col1, col2, num_middle):
     """
@@ -68,9 +83,9 @@ def interpolate_hsv(col1, col2, num_middle):
     for i in range(1, num_middle+1):
         frac = i/num_middle
         yield QColor.fromHsv(
-                (start_h + delta_h*frac) % 360,
-                (start_s + delta_s*frac) % 256,
-                (start_v + delta_v*frac) % 256,
+            (start_h + delta_h*frac) % 360,
+            (start_s + delta_s*frac) % 256,
+            (start_v + delta_v*frac) % 256,
         )
     yield col2
 
@@ -110,7 +125,7 @@ class DotsWidget(QWidget):
         """Take slider input and reflect the new value in the label"""
         self.parent().a_f_slider_val_label.setText(str(value))
         self.angle_factor = value
-        if self.parent().framerate_slider.value() == 0:
+        if self.parent().speedmult_slider.value() == 0:
             self.frame_no -= 1
             self.next_animation_frame()
 
@@ -118,29 +133,36 @@ class DotsWidget(QWidget):
         """Take slider input and reflect the new value in the label"""
         self.parent().halfmax_slider_val_label.setText(str(value))
         self.halfmax = value
-        if self.parent().framerate_slider.value() == 0:
+        if self.parent().speedmult_slider.value() == 0:
             self.frame_no -= 1
             self.next_animation_frame()
 
     def change_speedmult(self, value):
         """Take slider input and reflect the new value in the label"""
         self.parent().speedmult_slider_val_label.setText(str(value))
-        self.speedmult = value
-        if self.parent().framerate_slider.value() == 0:
+        if value == 0:
+            self.timer.stop()
             self.frame_no -= 1
             self.next_animation_frame()
+            return
+        if not self.timer.isActive():
+            # it's going from zero to nonzero
+            self.timer.start(self.parent().delay_slider.value())
+
+        self.speedmult = value
+        # if self.parent().framerate_slider.value() == 0:
 
     def change_draw_axes(self, value):
         """Take checkbox input"""
         self.draw_axes = value
-        if self.parent().framerate_slider.value() == 0:
+        if self.parent().speedmult_slider.value() == 0:
             self.frame_no -= 1
             self.next_animation_frame()
 
     def change_join_end_dots(self, value):
         """Take checkbox input"""
         self.join_end_dots = value
-        if self.parent().framerate_slider.value() == 0:
+        if self.parent().speedmult_slider.value() == 0:
             self.frame_no -= 1
             self.next_animation_frame()
 
@@ -148,7 +170,7 @@ class DotsWidget(QWidget):
         """Take slider input and reflect the new value in the label"""
         self.parent().num_dots_slider_val_label.setText(str(value))
         self.num_dots = value
-        if self.parent().framerate_slider.value() == 0:
+        if self.parent().speedmult_slider.value() == 0:
             self.frame_no -= 1
             self.next_animation_frame()
 
@@ -156,7 +178,7 @@ class DotsWidget(QWidget):
         """Take slider input and reflect the new value in the label"""
         self.parent().dot_size_slider_val_label.setText(str(value))
         self.dot_size = value
-        if self.parent().framerate_slider.value() == 0:
+        if self.parent().speedmult_slider.value() == 0:
             self.frame_no -= 1
             self.next_animation_frame()
 
@@ -164,7 +186,7 @@ class DotsWidget(QWidget):
         """Take slider input and reflect the new value in the label"""
         self.parent().x_multiplier_slider_val_label.setText(str(value))
         self.x_multiplier = value
-        if self.parent().framerate_slider.value() == 0:
+        if self.parent().speedmult_slider.value() == 0:
             self.frame_no -= 1
             self.next_animation_frame()
 
@@ -172,7 +194,7 @@ class DotsWidget(QWidget):
         """Take slider input and reflect the new value in the label"""
         self.parent().y_multiplier_slider_val_label.setText(str(value))
         self.y_multiplier = value
-        if self.parent().framerate_slider.value() == 0:
+        if self.parent().speedmult_slider.value() == 0:
             self.frame_no -= 1
             self.next_animation_frame()
 
@@ -359,19 +381,19 @@ class Captivox(QWidget):
         halfmax_box.addWidget(self.halfmax_slider_val_label)
         controls_box.addRow("Period", halfmax_box)
 
-        framerate_box = QHBoxLayout()
-        self.framerate_slider = QSlider(Qt.Horizontal)
-        self.framerate_slider.setMaximum(24)
-        self.framerate_slider.setValue(FRAMERATE_DEF)
-        self.framerate_slider.valueChanged.connect(self.change_framerate)
-        self.framerate_slider_val_label = QLabel(str(self.framerate_slider.value()))
-        framerate_box.addWidget(self.framerate_slider)
-        framerate_box.addWidget(self.framerate_slider_val_label)
-        controls_box.addRow("Framerate", framerate_box)
+        delay_box = QHBoxLayout()
+        self.delay_slider = QSlider(Qt.Horizontal)
+        self.delay_slider.setMaximum(100)
+        self.delay_slider.setValue(DELAY_DEF)
+        self.delay_slider.valueChanged.connect(self.change_delay)
+        self.delay_slider_val_label = QLabel(str(self.delay_slider.value()))
+        delay_box.addWidget(self.delay_slider)
+        delay_box.addWidget(self.delay_slider_val_label)
+        controls_box.addRow("Delay (ms)", delay_box)
 
         speedmult_box = QHBoxLayout()
         self.speedmult_slider = QSlider(Qt.Horizontal)
-        self.speedmult_slider.setMinimum(1)
+        # self.speedmult_slider.setMinimum(1)
         self.speedmult_slider.setMaximum(12)
         self.speedmult_slider.setValue(SPEED_MULT_DEF)
         self.speedmult_slider.valueChanged.connect(self.dotwid.change_speedmult)
@@ -444,20 +466,18 @@ class Captivox(QWidget):
         controls_widget.setLayout(controls_box)
 
         layout.addWidget(controls_widget)
-        self.dotwid.timer.start(100/FRAMERATE_DEF)
+        self.dotwid.timer.start(DELAY_DEF)
 
         # icon used for the Window
-        self.setWindowIcon(QIcon("icon.png"))
+        self.setWindowIcon(QIcon(resource_path("icon.png")))
 
         # TODO toggle showing settings, change colours
 
-    def change_framerate(self, value):
+    def change_delay(self, value):
         """Take slider input and reflect the new value in the label"""
-        if value == 0:
-            self.dotwid.timer.stop()
-        else:
-            self.dotwid.timer.start(100/value)
-        self.framerate_slider_val_label.setText(str(value))
+        if not self.speedmult_slider.value() == 0:
+            self.dotwid.timer.start(value)
+        self.delay_slider_val_label.setText(str(value))
 
     def change_col1(self):
         colour = QColorDialog.getColor(self.dotwid.col1,
@@ -469,7 +489,7 @@ class Captivox(QWidget):
         p = self.change_col1_button.palette()
         p.setColor(QPalette.Button, colour)
         self.change_col1_button.setPalette(p)
-        if self.framerate_slider.value() == 0:
+        if self.speedmult_slider.value() == 0:
             self.dotwid.frame_no -= 1
             self.dotwid.next_animation_frame()
 
@@ -483,7 +503,7 @@ class Captivox(QWidget):
         p = self.change_col2_button.palette()
         p.setColor(QPalette.Button, colour)
         self.change_col2_button.setPalette(p)
-        if self.framerate_slider.value() == 0:
+        if self.speedmult_slider.value() == 0:
             self.dotwid.frame_no -= 1
             self.dotwid.next_animation_frame()
 
@@ -492,7 +512,7 @@ class Captivox(QWidget):
         Reset all slider controls to their default value
         Also resets animation frame
         """
-        self.framerate_slider.setValue(FRAMERATE_DEF)
+        self.delay_slider.setValue(DELAY_DEF)
         self.x_multiplier_slider.setValue(X_MULT_DEF)
         self.y_multiplier_slider.setValue(Y_MULT_DEF)
         self.dot_size_slider.setValue(DOT_SIZE_DEF)
