@@ -383,6 +383,7 @@ class Captivox(QWidget):
 
         delay_box = QHBoxLayout()
         self.delay_slider = QSlider(Qt.Horizontal)
+        self.delay_slider.setMinimum(1)
         self.delay_slider.setMaximum(100)
         self.delay_slider.setValue(DELAY_DEF)
         self.delay_slider.valueChanged.connect(self.change_delay)
