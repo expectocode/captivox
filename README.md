@@ -12,6 +12,8 @@ Optionally, run `pip install --user imageio` and ensure you have `ffmpeg` on you
 
 Oh, and be sure to use pip for python3, not python2. This project is python3 only. This might mean using `pip3` instead of `pip`.
 
+PS: if you need ffmpeg on a non-linux system, you may want to take a look at https://imageio.readthedocs.io/en/latest/format_ffmpeg.html as there are some imageio-specific ffmpeg installation methods.
+
 What does it look like?
 -----
 
