@@ -241,7 +241,8 @@ class DotsWidget(QWidget):
         progress_box.setWindowModality(Qt.WindowModal)
         # sleep(0.2)  # sometimes the progressbox wouldn't show. this seems to fix
         duration = self.timer.interval()
-        with imageio.get_writer(location, format='mp4', mode='I', fps=1000/duration, quality=9) as writer:
+        with imageio.get_writer(location, format='mp4', mode='I', fps=1000/duration, quality=6) as writer:
+            # TODO consider quality slider in export dialog vs just picking sane default
             self.frame_no = 1
             for i in range(self.halfmax * 2 + 1):  # TODO check if +1 is correct
                 progress_box.setValue(i)
