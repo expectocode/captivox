@@ -208,9 +208,14 @@ class DotsWidget(QWidget):
         if not EXPORT_AVAILABLE:
             msgbox = QMessageBox(QMessageBox.Information,
                                  "Export not available",
-                                 "You need to install `imageio` to export videos")
-            msgbox.exec()
-            return
+                                 "`imageio` and `ffmpeg` must be installed to export videos")
+            return msgbox.exec()
+
+        if not self.timer.isActive():
+            msgbox = QMessageBox(QMessageBox.Warning,
+                                 "Cannot export animation",
+                                 "Cannot export video when speed is 0")
+            return msgbox.exec()
 
         location = QFileDialog.getSaveFileName(self,
                                                "Choose export location",
@@ -222,8 +227,7 @@ class DotsWidget(QWidget):
             msgbox = QMessageBox(QMessageBox.Information,
                                  "Export cancelled",
                                  "No export file given")
-            msgbox.exec()
-            return
+            return msgbox.exec()
 
         if not location.endswith('.mp4'):
             location += '.mp4'
@@ -237,9 +241,9 @@ class DotsWidget(QWidget):
         progress_box.setWindowModality(Qt.WindowModal)
         # sleep(0.2)  # sometimes the progressbox wouldn't show. this seems to fix
         duration = self.timer.interval()
-        with imageio.get_writer(location, format='mp4', mode='I', fps=1000/duration) as writer:
+        with imageio.get_writer(location, format='mp4', mode='I', fps=1000/duration, quality=9) as writer:
             self.frame_no = 1
-            for i in range(self.halfmax * 2 + 1):
+            for i in range(self.halfmax * 2 + 1):  # TODO check if +1 is correct
                 progress_box.setValue(i)
                 if progress_box.wasCanceled():
                     remove(location)
