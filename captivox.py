@@ -350,6 +350,7 @@ class Captivox(QWidget):
     def __init__(self):
         super().__init__(None)
         self.setWindowTitle("Captivox")
+        self.setWindowFlags(Qt.Dialog)  # Make it start as floating on tiling WMs
         layout = QVBoxLayout(self)
         self.dotwid = DotsWidget()
         self.dotwid.timer = QTimer(self)
