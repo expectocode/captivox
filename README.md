@@ -31,4 +31,6 @@ Final notes
 
 When exporting video, beware that the result will look a lot faster than it does when you're playing around with it. This is because when displaying live, there is an extra delay to actually render each frame before it is shown, but in the video the frames are all pre-rendered and thus it appears much faster. You may want to increase 'delay' to compensate.
 
+Also, reduced period values will reduce video length and hence filesize. A trick to getting nice output with small period values is to increase the X and Y multipliers - if multiplier * period is a nice significant number, and especially if it is 180, you can avoid the sometimes-annoying bounce.
+
 Also, if you **really** want a GIF instead of an mp4, despite the larger filesize and worse quality, you can use `ffmpeg` to convert it (some variant of `ffmpeg -i captivox.mp4 out.gif`).
