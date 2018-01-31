@@ -381,6 +381,7 @@ class Captivox(QWidget):
 
         dot_size_box = QHBoxLayout()
         self.dot_size_slider = QSlider(Qt.Horizontal)
+        self.dot_size_slider.setMinimum(1)
         self.dot_size_slider.setMaximum(40)
         self.dot_size_slider.setValue(DOT_SIZE_DEF)
         self.dot_size_slider.valueChanged.connect(self.dotwid.change_dot_size)
