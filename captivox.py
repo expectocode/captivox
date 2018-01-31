@@ -447,7 +447,7 @@ class Captivox(QWidget):
         self.draw_axes_checkbox.setChecked(DRAW_AXES_DEF)
         self.draw_axes_checkbox.stateChanged.connect(self.dotwid.change_draw_axes)
 
-        self.join_end_dots_checkbox = QCheckBox("Link first & last")
+        self.join_end_dots_checkbox = QCheckBox("Link first && last")
         self.draw_axes_checkbox.setChecked(JOIN_ENDS_DEF)
         self.join_end_dots_checkbox.stateChanged.connect(self.dotwid.change_join_end_dots)
 
