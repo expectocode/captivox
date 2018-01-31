@@ -31,6 +31,8 @@ JOIN_ENDS_DEF = False
 DRAW_AXES_DEF = False
 COL1_DEF = QColor.fromRgb(0, 180, 0)
 COL2_DEF = QColor.fromRgb(0, 0, 180)
+LINES_DEF = False
+CONNECT_LINES_DEF = False
 
 
 def resource_path(relative_path):
@@ -112,6 +114,8 @@ class DotsWidget(QWidget):
         self.join_end_dots = JOIN_ENDS_DEF
         self.col1 = COL1_DEF
         self.col2 = COL2_DEF
+        self.draw_lines = LINES_DEF
+        self.connect_lines = CONNECT_LINES_DEF
 
     def minimumSizeHint(self):
         """Must be implemented"""
@@ -198,6 +202,22 @@ class DotsWidget(QWidget):
             self.frame_no -= 1
             self.next_animation_frame()
 
+    def change_lines_state(self, value):
+        """Take checkbox input"""
+        self.draw_lines = value
+        self.parent().connect_lines_checkbox.setEnabled(value)
+        if self.parent().speedmult_slider.value() == 0:
+            self.frame_no -= 1
+            self.next_animation_frame()
+
+    def change_connect_lines(self, value):
+        """Take checkbox input"""
+        self.connect_lines = value
+        if self.parent().speedmult_slider.value() == 0:
+            self.frame_no -= 1
+            self.next_animation_frame()
+
+
     def next_animation_frame(self):
         """Connects to the timer to fire the animation"""
         self.update()
@@ -242,7 +262,10 @@ class DotsWidget(QWidget):
         # sleep(0.2)  # sometimes the progressbox wouldn't show. this seems to fix
         duration = self.timer.interval()
         with imageio.get_writer(location, format='mp4', mode='I', fps=1000/duration, quality=6) as writer:
+        # with imageio.get_writer(location, format='gif', fps=1000/duration) as writer:
+            # mode is I to tell the writer to expect multiple images. options after that are to format
             # TODO consider quality slider in export dialog vs just picking sane default
+            # TODO sort out bug with mp4 failing to loop properly
             self.frame_no = 1
             for i in range(self.halfmax * 2 + 1):  # TODO check if +1 is correct
                 progress_box.setValue(i)
@@ -282,6 +305,7 @@ class DotsWidget(QWidget):
 
         colours = interpolate_hsv(self.col1, self.col2, self.num_dots - 2)
         # self.num_dots slider minimum is 2, so middle num minimum 0 which is ok
+        last = None
 
         for cur_dot_num in range(self.num_dots):
             if self.join_end_dots:
@@ -311,7 +335,15 @@ class DotsWidget(QWidget):
             x = cos(radians(self.x_multiplier * progress)) * width / 2
             y = cos(radians(self.y_multiplier * progress)) * height / 2
 
-            painter.drawEllipse(QPointF(x, y), self.dot_size, self.dot_size)
+            if self.draw_lines:
+                painter.setPen(QPen(colour, self.dot_size))
+                painter.drawLine(QPointF(x, y), QPointF(0,0))
+                if self.connect_lines:
+                    if last:
+                        painter.drawLine(QPointF(x, y), last)
+                    last = QPointF(x,y)
+            else:
+                painter.drawEllipse(QPointF(x, y), self.dot_size, self.dot_size)
 
 
 class Captivox(QWidget):
@@ -333,18 +365,18 @@ class Captivox(QWidget):
         self.angle_factor_slider.valueChanged.connect(self.dotwid.change_angle_factor)
         angle_factor_box.addWidget(self.angle_factor_slider)
         angle_factor_box.addWidget(self.a_f_slider_val_label)
-        controls_box.addRow("Angle Factor", angle_factor_box)
+        controls_box.addRow("Angle", angle_factor_box)
 
         num_dots_box = QHBoxLayout()
         self.num_dots_slider = QSlider(Qt.Horizontal)
         self.num_dots_slider.setMinimum(2)
-        self.num_dots_slider.setMaximum(200)
+        self.num_dots_slider.setMaximum(300)
         self.num_dots_slider.setValue(NUM_DOTS_DEF)
         self.num_dots_slider.valueChanged.connect(self.dotwid.change_num_dots)
         self.num_dots_slider_val_label = QLabel(str(self.num_dots_slider.value()))
         num_dots_box.addWidget(self.num_dots_slider)
         num_dots_box.addWidget(self.num_dots_slider_val_label)
-        controls_box.addRow("Dot number", num_dots_box)
+        controls_box.addRow("Number", num_dots_box)
 
         dot_size_box = QHBoxLayout()
         self.dot_size_slider = QSlider(Qt.Horizontal)
@@ -354,7 +386,7 @@ class Captivox(QWidget):
         self.dot_size_slider_val_label = QLabel(str(self.dot_size_slider.value()))
         dot_size_box.addWidget(self.dot_size_slider)
         dot_size_box.addWidget(self.dot_size_slider_val_label)
-        controls_box.addRow("Dot size", dot_size_box)
+        controls_box.addRow("Thickness", dot_size_box)
 
         x_multiplier_box = QHBoxLayout()
         self.x_multiplier_slider = QSlider(Qt.Horizontal)
@@ -413,7 +445,7 @@ class Captivox(QWidget):
         self.draw_axes_checkbox.setChecked(DRAW_AXES_DEF)
         self.draw_axes_checkbox.stateChanged.connect(self.dotwid.change_draw_axes)
 
-        self.join_end_dots_checkbox = QCheckBox("Join end dots")
+        self.join_end_dots_checkbox = QCheckBox("Link first & last")
         self.draw_axes_checkbox.setChecked(JOIN_ENDS_DEF)
         self.join_end_dots_checkbox.stateChanged.connect(self.dotwid.change_join_end_dots)
 
@@ -441,12 +473,20 @@ class Captivox(QWidget):
         smaller_options_box.addWidget(self.change_col2_button)
         controls_box.addRow(smaller_options_box)
 
-        # colour_options_box = QHBoxLayout()
-        # colour_options_box.addSpacerItem(QSpacerItem(2, 2, QSizePolicy.MinimumExpanding))
-        # colour_options_box.addWidget(self.change_col1_button)
-        # colour_options_box.addWidget(self.change_col2_button)
-        # colour_options_box.addSpacerItem(QSpacerItem(2, 2, QSizePolicy.MinimumExpanding))
-        # controls_box.addRow(colour_options_box)
+        self.lines_checkbox = QCheckBox("Lines, not dots")
+        self.lines_checkbox.setChecked(LINES_DEF)
+        self.lines_checkbox.stateChanged.connect(self.dotwid.change_lines_state)
+
+        self.connect_lines_checkbox = QCheckBox("Connect line ends")
+        self.connect_lines_checkbox.setChecked(CONNECT_LINES_DEF)
+        self.connect_lines_checkbox.setEnabled(LINES_DEF) # Not available if lines are not drawn
+        self.connect_lines_checkbox.stateChanged.connect(self.dotwid.change_connect_lines)
+
+        lines_options_box = QHBoxLayout()
+        lines_options_box.addWidget(self.lines_checkbox)
+        lines_options_box.addWidget(self.connect_lines_checkbox)
+        lines_options_box.addSpacerItem(QSpacerItem(2, 2, QSizePolicy.MinimumExpanding))
+        controls_box.addRow(lines_options_box)
 
         reset_button = QPushButton("Reset values")
         reset_button.pressed.connect(self.reset_controls)
@@ -539,6 +579,9 @@ class Captivox(QWidget):
         pal = self.change_col2_button.palette()
         pal.setColor(QPalette.Button, COL2_DEF)
         self.change_col2_button.setPalette(pal)
+        self.lines_checkbox.setChecked(LINES_DEF)
+        self.connect_lines_checkbox.setChecked(LINES_DEF)
+        self.connect_lines_checkbox.setEnabled(LINES_DEF)
         self.dotwid.frame_no = 1
 
 
