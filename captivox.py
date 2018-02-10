@@ -125,29 +125,30 @@ class DotsWidget(QWidget):
         """Must be implemented"""
         return QSize(400, 400)
 
+    def _try_update_frame(self):
+        """Updates to the next animation frame if speedmult is 0"""
+        if self.parent().speedmult_slider.value() == 0:
+            self.frame_no -= 1
+            self.next_animation_frame()
+
     def change_angle_factor(self, value):
         """Take slider input and reflect the new value in the label"""
         self.parent().a_f_slider_val_label.setText(str(value))
         self.angle_factor = value
-        if self.parent().speedmult_slider.value() == 0:
-            self.frame_no -= 1
-            self.next_animation_frame()
+        self._try_update_frame()
 
     def change_halfmax(self, value):
         """Take slider input and reflect the new value in the label"""
         self.parent().halfmax_slider_val_label.setText(str(value))
         self.halfmax = value
-        if self.parent().speedmult_slider.value() == 0:
-            self.frame_no -= 1
-            self.next_animation_frame()
+        self._try_update_frame()
 
     def change_speedmult(self, value):
         """Take slider input and reflect the new value in the label"""
         self.parent().speedmult_slider_val_label.setText(str(value))
         if value == 0:
             self.timer.stop()
-            self.frame_no -= 1
-            self.next_animation_frame()
+            self._try_update_frame()
             return
         if not self.timer.isActive():
             # it's going from zero to nonzero
@@ -159,63 +160,47 @@ class DotsWidget(QWidget):
     def change_draw_axes(self, value):
         """Take checkbox input"""
         self.draw_axes = value
-        if self.parent().speedmult_slider.value() == 0:
-            self.frame_no -= 1
-            self.next_animation_frame()
+        self._try_update_frame()
 
     def change_join_end_dots(self, value):
         """Take checkbox input"""
         self.join_end_dots = value
-        if self.parent().speedmult_slider.value() == 0:
-            self.frame_no -= 1
-            self.next_animation_frame()
+        self._try_update_frame()
 
     def change_num_dots(self, value):
         """Take slider input and reflect the new value in the label"""
         self.parent().num_dots_slider_val_label.setText(str(value))
         self.num_dots = value
-        if self.parent().speedmult_slider.value() == 0:
-            self.frame_no -= 1
-            self.next_animation_frame()
+        self._try_update_frame()
 
     def change_dot_size(self, value):
         """Take slider input and reflect the new value in the label"""
         self.parent().dot_size_slider_val_label.setText(str(value))
         self.dot_size = value
-        if self.parent().speedmult_slider.value() == 0:
-            self.frame_no -= 1
-            self.next_animation_frame()
+        self._try_update_frame()
 
     def change_x_multiplier(self, value):
         """Take slider input and reflect the new value in the label"""
         self.parent().x_multiplier_slider_val_label.setText(str(value))
         self.x_multiplier = value
-        if self.parent().speedmult_slider.value() == 0:
-            self.frame_no -= 1
-            self.next_animation_frame()
+        self._try_update_frame()
 
     def change_y_multiplier(self, value):
         """Take slider input and reflect the new value in the label"""
         self.parent().y_multiplier_slider_val_label.setText(str(value))
         self.y_multiplier = value
-        if self.parent().speedmult_slider.value() == 0:
-            self.frame_no -= 1
-            self.next_animation_frame()
+        self._try_update_frame()
 
     def change_lines_state(self, value):
         """Take checkbox input"""
         self.draw_lines = value
         self.parent().connect_lines_checkbox.setEnabled(value)
-        if self.parent().speedmult_slider.value() == 0:
-            self.frame_no -= 1
-            self.next_animation_frame()
+        self._try_update_frame()
 
     def change_connect_lines(self, value):
         """Take checkbox input"""
         self.connect_lines = value
-        if self.parent().speedmult_slider.value() == 0:
-            self.frame_no -= 1
-            self.next_animation_frame()
+        self._try_update_frame()
 
 
     def next_animation_frame(self):
