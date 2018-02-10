@@ -6,8 +6,8 @@ from time import sleep
 from PyQt5.QtGui import QPainter, QPalette, QPen, QColor, QBrush, QIcon
 from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QFormLayout,
                              QSizePolicy, QApplication, QSlider, QLabel,
-                             QPushButton, QCheckBox, QSpacerItem, QFileDialog,
-                             QMessageBox, QProgressDialog, QColorDialog)
+                             QPushButton, QCheckBox, QFileDialog, QMessageBox,
+                             QProgressDialog, QColorDialog)
 from PyQt5.QtCore import (QSize, QTimer, QPointF, Qt, QLineF, QByteArray,
                           QBuffer, QIODevice)
 EXPORT_AVAILABLE = True
@@ -462,7 +462,7 @@ class Captivox(QWidget):
         smaller_options_box = QHBoxLayout()
         smaller_options_box.addWidget(self.draw_axes_checkbox)
         smaller_options_box.addWidget(self.join_end_dots_checkbox)
-        smaller_options_box.addSpacerItem(QSpacerItem(2, 2, QSizePolicy.MinimumExpanding))
+        smaller_options_box.addStretch()
         smaller_options_box.addWidget(self.change_col1_button)
         smaller_options_box.addWidget(self.change_col2_button)
         controls_box.addRow(smaller_options_box)
@@ -479,7 +479,7 @@ class Captivox(QWidget):
         lines_options_box = QHBoxLayout()
         lines_options_box.addWidget(self.lines_checkbox)
         lines_options_box.addWidget(self.connect_lines_checkbox)
-        lines_options_box.addSpacerItem(QSpacerItem(2, 2, QSizePolicy.MinimumExpanding))
+        lines_options_box.addStretch()
         controls_box.addRow(lines_options_box)
 
         reset_button = QPushButton("Reset values")
@@ -492,9 +492,9 @@ class Captivox(QWidget):
         last_controls = QHBoxLayout()
         # last_controls.addWidget(self.draw_axes_checkbox)
         # last_controls.addWidget(self.join_end_dots_checkbox)
-        last_controls.addSpacerItem(QSpacerItem(2, 2, QSizePolicy.MinimumExpanding))
+        last_controls.addStretch()
         last_controls.addWidget(reset_button)
-        last_controls.addSpacerItem(QSpacerItem(2, 2, QSizePolicy.MinimumExpanding))
+        last_controls.addStretch()
         last_controls.addWidget(export_button)
         controls_box.addRow(last_controls)
 
