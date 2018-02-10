@@ -17,7 +17,7 @@ PS: if you need ffmpeg on a non-linux system, you may want to take a look at htt
 What does it look like?
 -----
 
-Like this!
+[Like this!](https://imgur.com/a/WJXby)
 
 ![Screenshot of the app](screenshot.png)
 
