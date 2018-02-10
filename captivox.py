@@ -34,6 +34,11 @@ COL2_DEF = QColor.fromRgb(0, 0, 180)
 LINES_DEF = False
 CONNECT_LINES_DEF = False
 
+# This value allows "using" floating point values on the slider by
+# multiplying the maximum by it, and then dividing whatever value.
+SIDE_MULT_PRECISION = 100
+SIDE_MULT_FMT = '{:.2f}'
+
 
 def resource_path(relative_path):
     """
@@ -181,13 +186,15 @@ class DotsWidget(QWidget):
 
     def change_x_multiplier(self, value):
         """Take slider input and reflect the new value in the label"""
-        self.parent().x_multiplier_slider_val_label.setText(str(value))
+        value /= SIDE_MULT_PRECISION
+        self.parent().x_multiplier_slider_val_label.setText(SIDE_MULT_FMT.format(value))
         self.x_multiplier = value
         self._try_update_frame()
 
     def change_y_multiplier(self, value):
         """Take slider input and reflect the new value in the label"""
-        self.parent().y_multiplier_slider_val_label.setText(str(value))
+        value /= SIDE_MULT_PRECISION
+        self.parent().y_multiplier_slider_val_label.setText(SIDE_MULT_FMT.format(value))
         self.y_multiplier = value
         self._try_update_frame()
 
@@ -377,20 +384,20 @@ class Captivox(QWidget):
 
         x_multiplier_box = QHBoxLayout()
         self.x_multiplier_slider = QSlider(Qt.Horizontal)
-        self.x_multiplier_slider.setMaximum(10)
-        self.x_multiplier_slider.setValue(X_MULT_DEF)
+        self.x_multiplier_slider.setMaximum(10 * SIDE_MULT_PRECISION)
+        self.x_multiplier_slider.setValue(X_MULT_DEF * SIDE_MULT_PRECISION)
         self.x_multiplier_slider.valueChanged.connect(self.dotwid.change_x_multiplier)
-        self.x_multiplier_slider_val_label = QLabel(str(self.x_multiplier_slider.value()))
+        self.x_multiplier_slider_val_label = QLabel(SIDE_MULT_FMT.format(X_MULT_DEF))
         x_multiplier_box.addWidget(self.x_multiplier_slider)
         x_multiplier_box.addWidget(self.x_multiplier_slider_val_label)
         controls_box.addRow("X Multiplier", x_multiplier_box)
 
         y_multiplier_box = QHBoxLayout()
         self.y_multiplier_slider = QSlider(Qt.Horizontal)
-        self.y_multiplier_slider.setMaximum(10)
-        self.y_multiplier_slider.setValue(Y_MULT_DEF)
+        self.y_multiplier_slider.setMaximum(10 * SIDE_MULT_PRECISION)
+        self.y_multiplier_slider.setValue(Y_MULT_DEF * SIDE_MULT_PRECISION)
         self.y_multiplier_slider.valueChanged.connect(self.dotwid.change_y_multiplier)
-        self.y_multiplier_slider_val_label = QLabel(str(self.y_multiplier_slider.value()))
+        self.y_multiplier_slider_val_label = QLabel(SIDE_MULT_FMT.format(Y_MULT_DEF))
         y_multiplier_box.addWidget(self.y_multiplier_slider)
         y_multiplier_box.addWidget(self.y_multiplier_slider_val_label)
         controls_box.addRow("Y Multiplier", y_multiplier_box)
@@ -549,8 +556,8 @@ class Captivox(QWidget):
         Also resets animation frame
         """
         self.delay_slider.setValue(DELAY_DEF)
-        self.x_multiplier_slider.setValue(X_MULT_DEF)
-        self.y_multiplier_slider.setValue(Y_MULT_DEF)
+        self.x_multiplier_slider.setValue(X_MULT_DEF * SIDE_MULT_PRECISION)
+        self.y_multiplier_slider.setValue(Y_MULT_DEF * SIDE_MULT_PRECISION)
         self.dot_size_slider.setValue(DOT_SIZE_DEF)
         self.num_dots_slider.setValue(NUM_DOTS_DEF)
         self.angle_factor_slider.setValue(ANGLE_FACTOR_DEF)
