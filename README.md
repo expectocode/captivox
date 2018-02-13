@@ -17,9 +17,7 @@ PS: if you need ffmpeg on a non-linux system, you may want to take a look at htt
 What does it look like?
 -----
 
-[Like this!](https://imgur.com/a/WJXby)
-
-![Screenshot of the app](screenshot.png)
+[Here are some exported animations from it](https://imgur.com/a/WJXby), [and here is a more updated screencast of Captivox in use.](https://gfycat.com/ScentedDefiantAsianpiedstarling)
 
 Can I contribute?
 -----
