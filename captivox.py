@@ -325,13 +325,7 @@ class DotsWidget(QWidget):
             painter.drawLine(QLineF(0, self.height() / 2, 0, -self.height() / 2))
             painter.drawLine(QLineF(self.width() / 2, 0, -self.width() / 2, 0))
 
-        colours = list(interpolate_hsv(self.col1, self.col2, self.num_dots - 2))
-        # self.num_dots slider minimum is 2, so middle num minimum 0 which is ok
         last = None
-
-        coords = []
-        # closest_val = float('inf')
-        # closest = None
 
         for cur_dot_num in range(self.num_dots):
             if self.join_end_dots:
@@ -356,16 +350,11 @@ class DotsWidget(QWidget):
             x = cos(radians(self.x_multiplier * progress)) * width / 2
             y = cos(radians(self.y_multiplier * progress)) * height / 2
 
-            coords.append((x, y))
-            # if pythagorean_distance((x, y), (width / 2, 0)) < closest_val:
-            #     closest_val = pythagorean_distance((x, y), (width / 2, 0))
-            #     closest = cur_dot_num
-
-        # for (i, (x, y)) in enumerate(coords[closest:] + coords[:closest]):
-        for (i, (x, y)) in enumerate(coords):
-            # colour = colours[i].toRgb()
-            frac = (atan(y / x) + pi / 2) / pi
-            # if (progress
+            # frac = (atan(y / x) + pi / 2) / pi
+            frac = (cos(radians(self.x_multiplier * progress)) + 1) / 2
+            # if cos(radians(self.x_multiplier * progress)) > 0:
+            # # if (progress > 90):
+            #     frac = 1 - frac
             colour = get_hsv_at_frac(self.col1, self.col2, frac)
             painter.setPen(QPen(colour))
             painter.setBrush(QBrush(colour))
