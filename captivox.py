@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from math import sin, cos, radians
+from math import sin, cos, radians, atan, pi
 import sys
 from os import path, remove
 from time import sleep
@@ -91,6 +91,43 @@ def interpolate_hsv(col1, col2, num_middle):
         )
     yield col2
 
+def get_hsv_at_frac(col1, col2, frac):
+    """see above"""
+    assert col1.isValid()
+    assert col2.isValid()
+
+    start_h = col1.hsvHue() % 360
+    start_s = col1.hsvSaturation() % 256
+    start_v = col1.value() % 256
+
+    delta_h = (col2.hsvHue() % 360) - start_h
+    # https://stackoverflow.com/questions/2593832/
+    # how-to-interpolate-hue-values-in-hsv-colour-space
+    # Can be + or -, and magnitude can be > 180 or < 180
+    if delta_h < -180:
+        # Between -360 and -180
+        # eg 10 - 300 = -290
+        # we should go the other way around
+        # eg 70
+        delta_h = 360 + delta_h
+    elif delta_h > 180:
+        # delta h between 180 and 360, we should go the other way around
+        delta_h = - 360 + delta_h
+
+    delta_s = (col2.hsvSaturation() % 256) - start_s
+    delta_v = (col2.value() % 256) - start_v
+
+    return QColor.fromHsv(
+        (start_h + delta_h*frac) % 360,
+        (start_s + delta_s*frac) % 256,
+        (start_v + delta_v*frac) % 256,
+    )
+
+
+def pythagorean_distance(t1, t2):
+    x1, y1 = t1
+    x2, y2 = t2
+    return ((abs(x1 - x2) ** 2) + (abs(y1 - y2) **2)) ** 0.5
 
 class DotsWidget(QWidget):
     """A custom widget for animating dots"""
@@ -288,9 +325,13 @@ class DotsWidget(QWidget):
             painter.drawLine(QLineF(0, self.height() / 2, 0, -self.height() / 2))
             painter.drawLine(QLineF(self.width() / 2, 0, -self.width() / 2, 0))
 
-        colours = interpolate_hsv(self.col1, self.col2, self.num_dots - 2)
+        colours = list(interpolate_hsv(self.col1, self.col2, self.num_dots - 2))
         # self.num_dots slider minimum is 2, so middle num minimum 0 which is ok
         last = None
+
+        coords = []
+        # closest_val = float('inf')
+        # closest = None
 
         for cur_dot_num in range(self.num_dots):
             if self.join_end_dots:
@@ -299,12 +340,7 @@ class DotsWidget(QWidget):
             else:
                 angle_off = radians(self.angle_factor/self.num_dots) * cur_dot_num
                 frame_no = self.frame_no + cur_dot_num*(180/self.num_dots)/self.speedmult
-            # green = (240/self.num_dots) * (self.num_dots - cur_dot_num)
-            # blue = (240/self.num_dots) * cur_dot_num
-            # colour = QColor(0, green, blue)
-            colour = next(colours).toRgb()
-            painter.setPen(QPen(colour))
-            painter.setBrush(QBrush(colour))
+
             # progress = (cos(radians(SPEED_MULT * frame_no)) + 1)/2 * 180
             progress = abs((frame_no * self.speedmult) % (2*self.halfmax)-self.halfmax)
             # Progress oscillates every 360/speed_mult frames
@@ -320,6 +356,19 @@ class DotsWidget(QWidget):
             x = cos(radians(self.x_multiplier * progress)) * width / 2
             y = cos(radians(self.y_multiplier * progress)) * height / 2
 
+            coords.append((x, y))
+            # if pythagorean_distance((x, y), (width / 2, 0)) < closest_val:
+            #     closest_val = pythagorean_distance((x, y), (width / 2, 0))
+            #     closest = cur_dot_num
+
+        # for (i, (x, y)) in enumerate(coords[closest:] + coords[:closest]):
+        for (i, (x, y)) in enumerate(coords):
+            # colour = colours[i].toRgb()
+            frac = (atan(y / x) + pi / 2) / pi
+            # if (progress
+            colour = get_hsv_at_frac(self.col1, self.col2, frac)
+            painter.setPen(QPen(colour))
+            painter.setBrush(QBrush(colour))
             if self.draw_lines:
                 painter.setPen(QPen(colour, self.dot_size))
                 painter.drawLine(QPointF(x, y), QPointF(0,0))
